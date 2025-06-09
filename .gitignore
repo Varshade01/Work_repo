@@ -1,0 +1,78 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+gen/
+build/
+captures/
+
+# Gradle files
+.gradle/
+.build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+.captures/
+
+# IntelliJ
+*.iml
+.idea/
+
+# Kotlin DSL
+.gradle-kotlin-dsl-*
+!gradle-wrapper.jar
+
+# Keystore files
+*.jks
+*.keystore
+
+# External native build folder generated in Android Studio 2.2 and later
+.externalNativeBuild
+
+# NDK
+obj/
+
+# Google Services (e.g. APIs or Firebase)
+# google-services.json
+
+# Firebase Crashlytics
+crashlytics.properties
+fabric.properties
+
+# Jetifier
+.jetifier/
+
+# Firebase Performance plugin
+firebase-performance-plugin.properties
+
+# Xcode
+*.xcworkspace
+*.xcuserstate
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# Ignore Kotlin/Native debug symbols
+/*.kotlin_module
+
