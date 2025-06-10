@@ -6,17 +6,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.maat.cha.core.navigation.LocalNavController
 import com.maat.cha.core.navigation.destinations.Destination
 import com.maat.cha.core.navigation.getNavController
 import com.maat.cha.core.navigation.navigator.NavigationIntent
 import com.maat.cha.core.navigation.viewmodel.NavigationViewModel
+import com.maat.cha.feature.splash.navigations.splashScreen
 import kotlinx.coroutines.flow.SharedFlow
 
 @Composable
 fun Root(
-    navigationViewModel: NavigationViewModel = hiltViewModel()
+    navigationViewModel: NavigationViewModel = hiltViewModel(),
 ) {
     CompositionLocalProvider(
         LocalNavController provides getNavController()
@@ -28,13 +28,12 @@ fun Root(
 
         NavHost(
             navController = getNavController(),
-            startDestination = Destination.Main.route
+            startDestination = Destination.Splash.fullRoute
         ) {
-            composable(Destination.Main.route) {
-                // MainScreen(navController = getNavController())
-            }
+            splashScreen()
         }
     }
+
 }
 
 @Composable

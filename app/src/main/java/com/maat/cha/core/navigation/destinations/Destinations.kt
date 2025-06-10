@@ -25,4 +25,5 @@ sealed class Destination(val route: String, vararg params: String) {
 
     object Settings : Destination("settings")
     object Main : Destination("main")
+    object Splash : Destination("splash")
 }
