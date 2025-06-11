@@ -45,26 +45,43 @@ android {
 dependencies {
     //coroutines
     implementation(libs.kotlinx.coroutines.android)
+
     // Network + JSON
     implementation(libs.retrofit)
     implementation(libs.moshi)
+    implementation(libs.converter.moshi)
     ksp(libs.moshi.kotlin.codegen)
 
     //hilt-di
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+
     // Navigation
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation.compose)
 
+    //apps identifier
+    implementation(libs.androidx.ads.identifier)
+
+    //installreferrer
+    implementation (libs.installreferrer)
+
+    //apps flyer
+    implementation(libs.af.android.sdk)
+
+    //core-android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    //compose-ui
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    //testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

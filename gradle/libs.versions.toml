@@ -1,6 +1,10 @@
 [versions]
+adsIdentifier = "1.0.0-alpha05"
+afAndroidSdk = "6.17.0"
 agp = "8.10.1"
+converterMoshi = "2.9.0"
 hiltAndroid = "2.56.2"
+installreferrer = "2.2"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -16,8 +20,12 @@ navigationCompose = "2.9.0"
 hiltNavigationCompose = "1.2.0"
 
 [libraries]
+af-android-sdk = { module = "com.appsflyer:af-android-sdk", version.ref = "afAndroidSdk" }
+androidx-ads-identifier = { module = "androidx.ads:ads-identifier", version.ref = "adsIdentifier" }
+converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterMoshi" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
+installreferrer = { module = "com.android.installreferrer:installreferrer", version.ref = "installreferrer" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshiKotlinCodegen" }
 moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshiKotlinCodegen" }

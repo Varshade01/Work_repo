@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Maat.cha</string>
+
+    <!--SPLASH-->
+    <string name="connection_failed">Connection failed</string>
+
 </resources>

@@ -18,11 +18,16 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
+
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+
         windowInsetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
         setContent {
             MaatchaTheme {
                 Surface(
