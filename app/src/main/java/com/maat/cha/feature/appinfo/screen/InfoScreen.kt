@@ -1,0 +1,138 @@
+package com.maat.cha.feature.appinfo.screen
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.maat.cha.R
+import com.maat.cha.feature.appinfo.model.InfoScreenType
+import com.maat.cha.feature.composable.BackgroundApp
+import com.maat.cha.feature.composable.CardInfo
+import com.maat.cha.feature.composable.CircularIconButton
+import com.maat.cha.feature.composable.Title
+
+@Composable
+fun InfoScreen() {
+    //AppInfoScreenUI()
+}
+
+@Composable
+fun InfoScreenUI(
+    screenType: InfoScreenType,
+    onMainButtonClick: () -> Unit = {},
+    onBottomTextClick: () -> Unit = {}
+) {
+    var isPrivacyExpanded by remember { mutableStateOf(false) }
+
+    val title = stringResource(screenType.titleRes)
+    val content = when {
+        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+            stringResource(R.string.how_to_play)
+
+        else -> stringResource(screenType.contentRes)
+    }
+
+    val mainButtonText = when {
+        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+            stringResource(R.string.agree)
+
+        else -> stringResource(screenType.mainButtonTextRes)
+    }
+
+    val bottomText = when {
+        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+            stringResource(R.string.text_reject)
+
+        screenType is InfoScreenType.Privacy && !isPrivacyExpanded ->
+            null
+
+        screenType.bottomBtnTextRes != null ->
+            stringResource(screenType.bottomBtnTextRes)
+
+        else -> null
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        BackgroundApp(
+            backgroundRes = R.drawable.background_app,
+            modifier = Modifier.matchParentSize()
+        )
+
+        CircularIconButton(
+            onClick = { /* TODO */ },
+            iconRes = R.drawable.ic_btn_previous,
+            contentDescription = "btn previous",
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .align(Alignment.TopStart),
+            btnText = "",
+            textColor = Color.Yellow,
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            contentScale = ContentScale.Crop,
+            backgroundRes = null,
+            iconSize = 56,
+            sizeItem = 56,
+        )
+
+        Title(
+            text = title,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 32.dp, vertical = 16.dp),
+            textColor = Color.White,
+            borderColor = Color.White,
+            icon = null,
+            widthItem = 240.dp,
+        )
+
+        CardInfo(
+            textContent = content,
+            bottomTitleText = bottomText,
+            fontSizeTextContent = 18.sp,
+            fontSizeBottomTitleText = 32.sp,
+            modifier = Modifier.align(Alignment.Center),
+            mainButtonText = mainButtonText,
+            onMainButtonClick = onMainButtonClick,
+            onBottomTextClick = onBottomTextClick,
+            centerContent = screenType is InfoScreenType.Privacy && !isPrivacyExpanded,
+            showPrivacyPolicyLink = screenType is InfoScreenType.Privacy && !isPrivacyExpanded,
+            onPrivacyPolicyClick = {
+                isPrivacyExpanded = true
+            }
+        )
+    }
+}
+
+
+@Preview
+@Composable
+fun PreviewHowToPlay() {
+    InfoScreenUI(screenType = InfoScreenType.HowToPlay)
+}
+
+@Preview
+@Composable
+fun PreviewTerms() {
+    InfoScreenUI(screenType = InfoScreenType.TermsOfUse)
+}
+
+@Preview
+@Composable
+fun PreviewPrivacy() {
+    InfoScreenUI(screenType = InfoScreenType.Privacy)
+}
+

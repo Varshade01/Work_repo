@@ -3,5 +3,30 @@
 
     <!--SPLASH-->
     <string name="connection_failed">Connection failed</string>
+    <!--App INFO-->
+    <string name="how_to_play">
+    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the 
+        industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\n\n
+    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the 
+        industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+    </string>
+    <string name="title_how_to_play">How to play</string>
+    <string name="title_terms_of_use">Terms of Use</string>
+    <string name="title_privacy">Privacy</string>
+    <string name="text_reject">Reject</string>
+    <string name="text_privacy">You can read our privacy policy</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="got_it">GOT IT!</string>
+    <string name="agree">Agree</string>
+    <string name="accept">Accept</string>
+
+    <!--Settings-->
+    <string name="settings_title">Settings</string>
+    <string name="music_switch_title">Music</string>
+    <string name="vfx_switch_title">VFX</string>
+
+    <!--Game screen-->
+    <string name="game_points">500000</string>
+    <string name="rounds_title">Rounds:</string>
 
 </resources>

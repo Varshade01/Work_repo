@@ -43,6 +43,13 @@ android {
 }
 
 dependencies {
+    //splash
+    implementation(libs.androidx.core.splashscreen)
+
+    //
+    implementation (libs.accompanist.systemuicontroller)
+
+
     //coroutines
     implementation(libs.kotlinx.coroutines.android)
 
