@@ -3,16 +3,12 @@ package com.maat.cha.core.navigation.actions
 import com.maat.cha.core.navigation.destinations.Destination
 import com.maat.cha.core.navigation.destinations.InfoType
 import com.maat.cha.core.navigation.navigator.AppNavigator
-import com.maat.cha.feature.main.navigation.MainNavigationActions
+import com.maat.cha.feature.appinfo.navigation.InfoNavigationActions
 import javax.inject.Inject
 
-class MainNavActionsImpl @Inject constructor(
+class InfoNavActionsImpl @Inject constructor(
     private val navigator: AppNavigator
-) : MainNavigationActions {
-    override suspend fun navigateToSettings() {
-        navigator.navigateTo(Destination.Settings.fullRoute)
-    }
-
+) : InfoNavigationActions {
     override suspend fun navigateToInfo(type: InfoType) {
         navigator.navigateTo(Destination.Info.createRoute(type))
     }
@@ -21,11 +17,7 @@ class MainNavActionsImpl @Inject constructor(
         navigator.navigateTo(Destination.Game.fullRoute)
     }
 
-    override suspend fun minimizeApp() {
-        navigator.minimizeApp()
+    override suspend fun navigateBack() {
+        navigator.navigateBack()
     }
-
-    override suspend fun navigateToReferenceInfo(type: InfoType) {
-        navigator.navigateTo(Destination.ReferenceInfo.createRoute(type))
-    }
-}
+} 

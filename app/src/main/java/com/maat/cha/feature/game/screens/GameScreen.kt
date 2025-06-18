@@ -32,20 +32,30 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.MainButton
 import com.maat.cha.feature.composable.Title
+import com.maat.cha.feature.game.viewmodel.GameViewModel
 import com.maat.cha.ui.theme.Orange_light
 
 @Composable
-fun GameScreen() {
-    GameScreenUI()
+fun GameScreen(
+    viewModel: GameViewModel = hiltViewModel()
+) {
+    GameScreenUI(
+        onBackClick = { viewModel.onBackClick() },
+        onInfoClick = { viewModel.onInfoClick() }
+    )
 }
 
 @Composable
-fun GameScreenUI() {
+fun GameScreenUI(
+    onBackClick: () -> Unit = {},
+    onInfoClick: () -> Unit = {}
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
             backgroundRes = R.drawable.background_app,
@@ -53,7 +63,7 @@ fun GameScreenUI() {
         )
 
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onBackClick,
             iconRes = R.drawable.ic_btn_previous,
             contentDescription = "btn previous",
             modifier = Modifier
@@ -64,7 +74,7 @@ fun GameScreenUI() {
             sizeItem = 56
         )
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onInfoClick,
             iconRes = R.drawable.ic_btn_info,
             contentDescription = "btn info",
             modifier = Modifier

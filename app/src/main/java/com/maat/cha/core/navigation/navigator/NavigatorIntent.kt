@@ -12,4 +12,6 @@ sealed class NavigationIntent {
         val inclusive: Boolean = false,
         val isSingleTop: Boolean = false,
     ) : NavigationIntent()
+
+    object MinimizeApp : NavigationIntent()
 }

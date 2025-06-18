@@ -4,28 +4,38 @@ import android.app.Activity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.LogoItem
+import com.maat.cha.feature.splash.events.SplashEvents
+import com.maat.cha.feature.splash.viewmodel.SplashViewModel
+import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(
+    viewModel: SplashViewModel = hiltViewModel()
+) {
     HideSystemBars()
-    SplashScreenUI()
-}
+    
+    LaunchedEffect(key1 = true) {
+        delay(2000) // 2 second delay
+        viewModel.onEvent(SplashEvents.OnDelayComplete)
+    }
 
-@Composable
-fun SplashScreenUI() {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -33,14 +43,43 @@ fun SplashScreenUI() {
             backgroundRes = R.drawable.background_app,
             modifier = Modifier.matchParentSize()
         )
-        LogoItem(
-            logoRes = R.drawable.logo_splash,
+        
+        Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(bottom = 124.dp)
-        )
+                .padding(bottom = 124.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            LogoItem(
+                logoRes = R.drawable.logo_splash,
+                modifier = Modifier.align(Alignment.Center)
+            )
+            
+            CircularProgressIndicator(
+                color = Color(0xFFFDB001),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
     }
 }
+
+//@Composable
+//fun SplashScreenUI() {
+//    Box(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        BackgroundApp(
+//            backgroundRes = R.drawable.background_app,
+//            modifier = Modifier.matchParentSize()
+//        )
+//        LogoItem(
+//            logoRes = R.drawable.logo_splash,
+//            modifier = Modifier
+//                .align(Alignment.Center)
+//                .padding(bottom = 124.dp)
+//        )
+//    }
+//}
 
 @Composable
 fun HideSystemBars() {

@@ -20,19 +20,27 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.CustomSwitch
 import com.maat.cha.feature.composable.Title
+import com.maat.cha.feature.settings.viewmodel.SettingsViewModel
 
 @Composable
-fun SettingsScreen() {
-    SettingsScreenUI()
+fun SettingsScreen(
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
+    SettingsScreenUI(
+        onBackClick = { viewModel.onBackClick() }
+    )
 }
 
 @Composable
-fun SettingsScreenUI() {
+fun SettingsScreenUI(
+    onBackClick: () -> Unit = {}
+) {
 
     var musicSwitchChecked by remember { mutableStateOf(true) }
     var vfxSwitchChecked by remember { mutableStateOf(true) }
@@ -43,7 +51,7 @@ fun SettingsScreenUI() {
             modifier = Modifier.matchParentSize()
         )
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onBackClick,
             iconRes = R.drawable.ic_btn_previous,
             contentDescription = "btn previous",
             modifier = Modifier
@@ -120,5 +128,5 @@ fun SettingsScreenUI() {
 @Composable
 @Preview
 fun SettingsScreenPreview() {
-    SettingsScreen()
+    SettingsScreenUI()
 }

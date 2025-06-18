@@ -59,6 +59,9 @@ dependencies {
     implementation(libs.converter.moshi)
     ksp(libs.moshi.kotlin.codegen)
 
+    //data store
+    implementation(libs.androidx.datastore.preferences)
+
     //hilt-di
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
