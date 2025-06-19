@@ -1,11 +1,13 @@
 package com.maat.cha.feature.appinfo.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -22,11 +24,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
+import com.maat.cha.core.navigation.destinations.ReferenceInfoSource
 import com.maat.cha.feature.appinfo.model.InfoScreenType
 import com.maat.cha.feature.appinfo.viewmodel.ReferenceInfoViewModel
 import com.maat.cha.feature.composable.BackgroundApp
@@ -37,11 +41,12 @@ import com.maat.cha.feature.composable.Title
 @Composable
 fun ReferenceInfoScreen(
     screenType: InfoScreenType,
+    source: ReferenceInfoSource = ReferenceInfoSource.ONBOARDING,
     viewModel: ReferenceInfoViewModel = hiltViewModel()
 ) {
     ReferenceInfoScreenUI(
         screenType = screenType,
-        onMainButtonClick = { viewModel.onGotItClick() },
+        onMainButtonClick = { viewModel.onGotItClick(screenType, source) },
         onBackClick = { viewModel.onBackClick() }
     )
 }
@@ -95,17 +100,19 @@ fun ReferenceInfoScreenUI(
             modifier = Modifier
                 .align(Alignment.Center)
                 .width(360.dp)
-                .height(480.dp)
+                .padding(horizontal = 16.dp)
         ) {
             Card(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -127,7 +134,7 @@ fun ReferenceInfoScreenUI(
                         onClick = onMainButtonClick,
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp,
-                        btnText = stringResource(R.string.got_it),
+                        btnText = stringResource(screenType.mainButtonTextRes),
                         textColor = Color.White,
                         backgroundRes = R.drawable.background_btn,
                         contentDescription = "Got it button",

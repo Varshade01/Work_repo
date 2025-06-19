@@ -30,6 +30,14 @@ class InfoViewModel @Inject constructor(
                     dataStorePreferences.setHasReadAllInfo(true)
                     navigationActions.navigateToGame()
                 }
+                is InfoScreenType.PrivacyPolicy -> {
+                    // For settings privacy policy, just go back
+                    navigationActions.navigateBack()
+                }
+                is InfoScreenType.TermsOfUsePolicy -> {
+                    // For settings terms of use, just go back
+                    navigationActions.navigateBack()
+                }
             }
         }
     }

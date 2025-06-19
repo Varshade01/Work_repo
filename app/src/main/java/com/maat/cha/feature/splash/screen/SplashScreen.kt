@@ -30,7 +30,7 @@ fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel()
 ) {
     HideSystemBars()
-    
+
     LaunchedEffect(key1 = true) {
         delay(2000) // 2 second delay
         viewModel.onEvent(SplashEvents.OnDelayComplete)
@@ -43,7 +43,7 @@ fun SplashScreen(
             backgroundRes = R.drawable.background_app,
             modifier = Modifier.matchParentSize()
         )
-        
+
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -54,32 +54,9 @@ fun SplashScreen(
                 logoRes = R.drawable.logo_splash,
                 modifier = Modifier.align(Alignment.Center)
             )
-            
-            CircularProgressIndicator(
-                color = Color(0xFFFDB001),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
         }
     }
 }
-
-//@Composable
-//fun SplashScreenUI() {
-//    Box(
-//        modifier = Modifier.fillMaxSize()
-//    ) {
-//        BackgroundApp(
-//            backgroundRes = R.drawable.background_app,
-//            modifier = Modifier.matchParentSize()
-//        )
-//        LogoItem(
-//            logoRes = R.drawable.logo_splash,
-//            modifier = Modifier
-//                .align(Alignment.Center)
-//                .padding(bottom = 124.dp)
-//        )
-//    }
-//}
 
 @Composable
 fun HideSystemBars() {

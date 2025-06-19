@@ -48,32 +48,35 @@ fun InfoScreenUI(
 ) {
     var isPrivacyExpanded by remember { mutableStateOf(false) }
 
+    val isPrivacy = screenType is InfoScreenType.Privacy
+    val isPrivacyExpandedState = isPrivacy && isPrivacyExpanded
+
     val title = stringResource(screenType.titleRes)
     val content = when {
-        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
-            stringResource(R.string.how_to_play)
-
+        isPrivacyExpandedState ->
+            stringResource(R.string.privacy_policy_content)
         else -> stringResource(screenType.contentRes)
     }
 
     val mainButtonText = when {
-        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+        isPrivacyExpandedState ->
             stringResource(R.string.agree)
-
         else -> stringResource(screenType.mainButtonTextRes)
     }
 
     val bottomText = when {
-        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+        isPrivacyExpandedState ->
             stringResource(R.string.text_reject)
-
-        screenType is InfoScreenType.Privacy && !isPrivacyExpanded ->
+        isPrivacy && !isPrivacyExpanded ->
             null
-
         screenType.bottomBtnTextRes != null ->
             stringResource(screenType.bottomBtnTextRes)
-
         else -> null
+    }
+
+    val handleBottomTextClick = when {
+        isPrivacyExpandedState -> ({ isPrivacyExpanded = false })
+        else -> onBottomTextClick
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -118,12 +121,12 @@ fun InfoScreenUI(
             modifier = Modifier.align(Alignment.Center),
             mainButtonText = mainButtonText,
             onMainButtonClick = onMainButtonClick,
-            onBottomTextClick = onBottomTextClick,
-            centerContent = screenType is InfoScreenType.Privacy && !isPrivacyExpanded,
-            showPrivacyPolicyLink = screenType is InfoScreenType.Privacy && !isPrivacyExpanded,
-            onPrivacyPolicyClick = {
-                isPrivacyExpanded = true
-            }
+            onBottomTextClick = handleBottomTextClick,
+            centerContent = isPrivacy && !isPrivacyExpanded,
+            showPrivacyPolicyLink = isPrivacy && !isPrivacyExpanded,
+            onPrivacyPolicyClick = if (isPrivacy && !isPrivacyExpanded) {
+                { isPrivacyExpanded = true }
+            } else null
         )
     }
 }

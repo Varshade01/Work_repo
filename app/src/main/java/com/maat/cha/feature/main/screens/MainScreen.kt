@@ -33,6 +33,7 @@ fun MainScreen(
 ) {
     val state by viewModel.state.collectAsState()
     MainScreenUI(
+        totalCoins = state.totalCoins,
         onBackClick = { viewModel.onEvent(MainEvents.OnBackClick) },
         onSettingsClick = { viewModel.onEvent(MainEvents.OnSettingsClick) },
         onPlayClick = { viewModel.onEvent(MainEvents.OnPlayClick) },
@@ -42,6 +43,7 @@ fun MainScreen(
 
 @Composable
 fun MainScreenUI(
+    totalCoins: Int = 0,
     onBackClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onPlayClick: () -> Unit = {},

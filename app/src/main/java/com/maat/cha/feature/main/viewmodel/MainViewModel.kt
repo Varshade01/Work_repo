@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.maat.cha.core.datastore.utils.DataStorePreferences
 import com.maat.cha.core.navigation.destinations.InfoType
+import com.maat.cha.core.navigation.destinations.ReferenceInfoSource
 import com.maat.cha.feature.main.events.MainEvents
 import com.maat.cha.feature.main.navigation.MainNavigationActions
 import com.maat.cha.feature.main.state.MainState
@@ -30,6 +31,12 @@ class MainViewModel @Inject constructor(
                 _state.update { it.copy(hasReadAllInfo = hasReadAllInfo) }
             }
         }
+        
+        viewModelScope.launch {
+            dataStorePreferences.totalCoins.collect { totalCoins ->
+                _state.update { it.copy(totalCoins = totalCoins) }
+            }
+        }
     }
 
     fun onEvent(event: MainEvents) {
@@ -51,7 +58,7 @@ class MainViewModel @Inject constructor(
             }
 
             is MainEvents.OnHowToPlayClick -> viewModelScope.launch {
-                navigationActions.navigateToReferenceInfo(InfoType.HOW_TO_PLAY)
+                navigationActions.navigateToReferenceInfo(InfoType.HOW_TO_PLAY, ReferenceInfoSource.MAIN)
             }
         }
     }

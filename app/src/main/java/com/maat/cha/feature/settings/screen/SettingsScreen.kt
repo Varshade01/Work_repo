@@ -1,15 +1,14 @@
 package com.maat.cha.feature.settings.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,25 +25,36 @@ import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.CustomSwitch
 import com.maat.cha.feature.composable.Title
+import com.maat.cha.feature.settings.events.SettingsEvents
 import com.maat.cha.feature.settings.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+    
     SettingsScreenUI(
-        onBackClick = { viewModel.onBackClick() }
+        musicEnabled = state.musicEnabled,
+        vfxEnabled = state.vfxEnabled,
+        onBackClick = { viewModel.onEvent(SettingsEvents.OnBackClick) },
+        onMusicToggle = { enabled -> viewModel.onEvent(SettingsEvents.OnMusicToggle(enabled)) },
+        onVfxToggle = { enabled -> viewModel.onEvent(SettingsEvents.OnVfxToggle(enabled)) },
+        onPrivacyPolicyClick = { viewModel.onEvent(SettingsEvents.OnPrivacyPolicyClick) },
+        onTermsOfUseClick = { viewModel.onEvent(SettingsEvents.OnTermsOfUseClick) }
     )
 }
 
 @Composable
 fun SettingsScreenUI(
-    onBackClick: () -> Unit = {}
+    musicEnabled: Boolean = true,
+    vfxEnabled: Boolean = true,
+    onBackClick: () -> Unit = {},
+    onMusicToggle: (Boolean) -> Unit = {},
+    onVfxToggle: (Boolean) -> Unit = {},
+    onPrivacyPolicyClick: () -> Unit = {},
+    onTermsOfUseClick: () -> Unit = {}
 ) {
-
-    var musicSwitchChecked by remember { mutableStateOf(true) }
-    var vfxSwitchChecked by remember { mutableStateOf(true) }
-
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
             backgroundRes = R.drawable.background_app,
@@ -85,8 +95,8 @@ fun SettingsScreenUI(
                 color = Color.White
             )
             CustomSwitch(
-                checked = musicSwitchChecked,
-                onCheckedChange = { musicSwitchChecked = it }
+                checked = musicEnabled,
+                onCheckedChange = onMusicToggle
             )
 
             Text(
@@ -97,14 +107,15 @@ fun SettingsScreenUI(
                 color = Color.White
             )
             CustomSwitch(
-                checked = vfxSwitchChecked,
-                onCheckedChange = { vfxSwitchChecked = it }
+                checked = vfxEnabled,
+                onCheckedChange = onVfxToggle
             )
         }
         Text(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(32.dp),
+                .padding(32.dp)
+                .clickable { onPrivacyPolicyClick() },
             text = stringResource(R.string.privacy_policy),
             fontSize = 18.sp,
             color = Color.White,
@@ -115,7 +126,8 @@ fun SettingsScreenUI(
         Text(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(32.dp),
+                .padding(32.dp)
+                .clickable { onTermsOfUseClick() },
             text = stringResource(R.string.title_terms_of_use),
             fontSize = 18.sp,
             color = Color.White,

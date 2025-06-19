@@ -40,4 +40,41 @@ class DataStorePreferences @Inject constructor(
             preferences[DataStoreKeys.USER_NAME] = name
         }
     }
+
+    val totalCoins: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.TOTAL_COINS] ?: 0
+    }
+
+    suspend fun setTotalCoins(coins: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.TOTAL_COINS] = coins
+        }
+    }
+
+    suspend fun addCoins(coins: Int) {
+        context.dataStore.edit { preferences ->
+            val currentCoins = preferences[DataStoreKeys.TOTAL_COINS] ?: 0
+            preferences[DataStoreKeys.TOTAL_COINS] = currentCoins + coins
+        }
+    }
+
+    val musicEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.MUSIC_ENABLED] ?: true
+    }
+
+    suspend fun setMusicEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.MUSIC_ENABLED] = enabled
+        }
+    }
+
+    val vfxEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.VFX_ENABLED] ?: true
+    }
+
+    suspend fun setVfxEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.VFX_ENABLED] = enabled
+        }
+    }
 } 
