@@ -8,6 +8,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +33,8 @@ fun SplashScreen(
 ) {
     HideSystemBars()
 
+    val state by viewModel.state.collectAsState()
+
     LaunchedEffect(key1 = true) {
         delay(2000) // 2 second delay
         viewModel.onEvent(SplashEvents.OnDelayComplete)
@@ -44,16 +48,71 @@ fun SplashScreen(
             modifier = Modifier.matchParentSize()
         )
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(bottom = 124.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            LogoItem(
-                logoRes = R.drawable.logo_splash,
-                modifier = Modifier.align(Alignment.Center)
-            )
+        when {
+            state.isLoading -> {
+                // Show splash screen
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(bottom = 124.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LogoItem(
+                        logoRes = R.drawable.logo_splash,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+
+            state.isApiLoading -> {
+                // Show loading indicator
+                CircularProgressIndicator(
+                    color = Color(0xFFFDB001),
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            state.error != null -> {
+                // Show error screen
+                ErrorScreen(
+                    errorMessage = state.error!!,
+                    onRetry = { viewModel.onEvent(SplashEvents.OnRetryApi) }
+                )
+            }
+
+            state.showWebView && state.webViewUrl != null -> {
+                // Show WebView
+                WebViewComposable(
+                    url = state.webViewUrl!!,
+                    onBackPressed = { viewModel.onEvent(SplashEvents.OnWebViewBackPressed) },
+                    onExternalNavigation = { viewModel.onEvent(SplashEvents.OnExternalNavigation) },
+                    onWebViewError = { viewModel.onEvent(SplashEvents.OnWebViewError) }
+                )
+            }
+
+            state.showBanner && state.bannerUrl != null -> {
+                // Show banner
+                BannerComposable(
+                    bannerUrl = state.bannerUrl!!,
+                    onBannerClick = { viewModel.onEvent(SplashEvents.OnBannerClick) },
+                    onBackPressed = { viewModel.onEvent(SplashEvents.OnBannerBackPressed) }
+                )
+            }
+
+            else -> {
+                // Show splash screen (fallback)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(bottom = 124.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LogoItem(
+                        logoRes = R.drawable.logo_splash,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
         }
     }
 }

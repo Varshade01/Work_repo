@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,8 @@ fun MainScreenUI(
     onPlayClick: () -> Unit = {},
     onHowToPlayClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
             backgroundRes = R.drawable.background_app,
@@ -76,7 +79,7 @@ fun MainScreenUI(
             backgroundRes = null,
             iconSize = 56,
             sizeItem = 56,
-            )
+        )
         CircularIconButton(
             onClick = onSettingsClick,
             iconRes = R.drawable.ic_btn_settings,

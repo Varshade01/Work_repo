@@ -57,7 +57,9 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.moshi)
     implementation(libs.converter.moshi)
+    implementation(libs.androidx.appcompat)
     ksp(libs.moshi.kotlin.codegen)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
     //data store
     implementation(libs.androidx.datastore.preferences)
@@ -99,4 +101,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Coil for image loading
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }
