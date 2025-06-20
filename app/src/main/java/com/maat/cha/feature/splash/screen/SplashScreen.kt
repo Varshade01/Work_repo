@@ -24,9 +24,15 @@ import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.LogoItem
 import com.maat.cha.feature.splash.events.SplashEvents
+import com.maat.cha.feature.splash.state.SplashUiState
+import com.maat.cha.feature.splash.utils.SplashConstants
 import com.maat.cha.feature.splash.viewmodel.SplashViewModel
 import kotlinx.coroutines.delay
 
+/**
+ * Main splash screen composable
+ * Handles the initial app loading and API response processing
+ */
 @Composable
 fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel()
@@ -35,90 +41,147 @@ fun SplashScreen(
 
     val state by viewModel.state.collectAsState()
 
+    // Handle splash delay
     LaunchedEffect(key1 = true) {
-        delay(2000) // 2 second delay
-        viewModel.onEvent(SplashEvents.OnDelayComplete)
+        delay(SplashConstants.SPLASH_DELAY_MS)
+        viewModel.onEvent(SplashEvents.OnSplashDelayComplete)
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
             backgroundRes = R.drawable.background_app,
             modifier = Modifier.matchParentSize()
         )
 
-        when {
-            state.isLoading -> {
-                // Show splash screen
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(bottom = 124.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LogoItem(
-                        logoRes = R.drawable.logo_splash,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+        // Render UI based on current state
+        when (val uiState = state.uiState) {
+            is SplashUiState.Initial -> {
+                SplashContent()
             }
 
-            state.isApiLoading -> {
-                // Show loading indicator
-                CircularProgressIndicator(
-                    color = Color(0xFFFDB001),
-                    modifier = Modifier.align(Alignment.Center)
+            is SplashUiState.Loading -> {
+                SplashContent()
+            }
+
+            is SplashUiState.ApiLoading -> {
+                ApiLoadingContent()
+            }
+
+            is SplashUiState.Error -> {
+                ErrorContent(
+                    errorMessage = uiState.message,
+                    isRetryable = uiState.isRetryable,
+                    onRetry = { viewModel.onEvent(SplashEvents.OnRetryApiCall) }
                 )
             }
 
-            state.error != null -> {
-                // Show error screen
-                ErrorScreen(
-                    errorMessage = state.error!!,
-                    onRetry = { viewModel.onEvent(SplashEvents.OnRetryApi) }
-                )
-            }
-
-            state.showWebView && state.webViewUrl != null -> {
-                // Show WebView
-                WebViewComposable(
-                    url = state.webViewUrl!!,
+            is SplashUiState.WebView -> {
+                WebViewContent(
+                    url = uiState.url,
                     onBackPressed = { viewModel.onEvent(SplashEvents.OnWebViewBackPressed) },
-                    onExternalNavigation = { viewModel.onEvent(SplashEvents.OnExternalNavigation) },
-                    onWebViewError = { viewModel.onEvent(SplashEvents.OnWebViewError) }
+                    onExternalNavigation = { viewModel.onEvent(SplashEvents.OnExternalNavigationDetected) },
+                    onWebViewError = { viewModel.onEvent(SplashEvents.OnWebViewLoadError) }
                 )
             }
 
-            state.showBanner && state.bannerUrl != null -> {
-                // Show banner
-                BannerComposable(
-                    bannerUrl = state.bannerUrl!!,
-                    onBannerClick = { viewModel.onEvent(SplashEvents.OnBannerClick) },
+            is SplashUiState.Banner -> {
+                BannerContent(
+                    bannerUrl = uiState.imageUrl,
+                    onBannerClick = { viewModel.onEvent(SplashEvents.OnBannerClicked) },
                     onBackPressed = { viewModel.onEvent(SplashEvents.OnBannerBackPressed) }
                 )
-            }
-
-            else -> {
-                // Show splash screen (fallback)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(bottom = 124.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LogoItem(
-                        logoRes = R.drawable.logo_splash,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
             }
         }
     }
 }
 
+/**
+ * Splash screen content with logo
+ */
 @Composable
-fun HideSystemBars() {
+private fun SplashContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = SplashConstants.BANNER_BOTTOM_PADDING_DP.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        LogoItem(
+            logoRes = R.drawable.logo_splash,
+            modifier = Modifier
+        )
+    }
+}
+
+/**
+ * API loading content with progress indicator
+ */
+@Composable
+private fun ApiLoadingContent() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = Color(SplashConstants.PRIMARY_COLOR)
+        )
+    }
+}
+
+/**
+ * Error content with retry functionality
+ */
+@Composable
+private fun ErrorContent(
+    errorMessage: String,
+    isRetryable: Boolean,
+    onRetry: () -> Unit
+) {
+    ErrorScreen(
+        errorMessage = errorMessage,
+        onRetry = if (isRetryable) onRetry else null
+    )
+}
+
+/**
+ * WebView content
+ */
+@Composable
+private fun WebViewContent(
+    url: String,
+    onBackPressed: () -> Unit,
+    onExternalNavigation: () -> Unit,
+    onWebViewError: () -> Unit
+) {
+    WebViewComposable(
+        url = url,
+        onBackPressed = onBackPressed,
+        onExternalNavigation = onExternalNavigation,
+        onWebViewError = onWebViewError
+    )
+}
+
+/**
+ * Banner content
+ */
+@Composable
+private fun BannerContent(
+    bannerUrl: String,
+    onBannerClick: () -> Unit,
+    onBackPressed: () -> Unit
+) {
+    BannerComposable(
+        bannerUrl = bannerUrl,
+        onBannerClick = onBannerClick,
+        onBackPressed = onBackPressed
+    )
+}
+
+/**
+ * Hides system bars for full-screen experience
+ */
+@Composable
+private fun HideSystemBars() {
     val window = (LocalView.current.context as? Activity)?.window
     DisposableEffect(window) {
         window?.let {
@@ -134,6 +197,6 @@ fun HideSystemBars() {
 
 @Preview
 @Composable
-fun PreviewSplashScreen() {
+private fun PreviewSplashScreen() {
     SplashScreen()
 }

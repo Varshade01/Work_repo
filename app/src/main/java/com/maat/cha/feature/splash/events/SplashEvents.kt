@@ -1,12 +1,29 @@
 package com.maat.cha.feature.splash.events
 
+import com.maat.cha.core.data.model.MatchViewResponse
+import com.maat.cha.feature.splash.state.SplashError
+
+/**
+ * Represents all possible events that can be triggered in the splash screen
+ */
 sealed class SplashEvents {
-    object OnDelayComplete : SplashEvents()
-    object OnRetryApi : SplashEvents()
-    object OnBannerClick : SplashEvents()
+    // Lifecycle events
+    object OnSplashDelayComplete : SplashEvents()
+    object OnRetryApiCall : SplashEvents()
+    
+    // User interaction events
+    object OnBannerClicked : SplashEvents()
     object OnWebViewBackPressed : SplashEvents()
     object OnBannerBackPressed : SplashEvents()
-    object OnExternalNavigation : SplashEvents()
-    object OnReturnFromExternal : SplashEvents()
-    object OnWebViewError : SplashEvents()
+    
+    // Navigation events
+    object OnExternalNavigationDetected : SplashEvents()
+    object OnReturnFromExternalNavigation : SplashEvents()
+    
+    // Error events
+    object OnWebViewLoadError : SplashEvents()
+    
+    // Data events
+    data class OnApiResponseReceived(val response: MatchViewResponse) : SplashEvents()
+    data class OnApiError(val error: SplashError) : SplashEvents()
 } 

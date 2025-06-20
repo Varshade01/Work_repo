@@ -10,11 +10,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.maat.cha.feature.splash.utils.SplashConstants
 
+/**
+ * Error screen composable
+ * Displays error messages with optional retry functionality
+ */
 @Composable
 fun ErrorScreen(
     errorMessage: String,
-    onRetry: () -> Unit
+    onRetry: (() -> Unit)?
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -23,7 +28,7 @@ fun ErrorScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(SplashConstants.ERROR_SCREEN_PADDING_DP.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -42,21 +47,24 @@ fun ErrorScreen(
                 textAlign = TextAlign.Center
             )
             
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFDB001)
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Text(
-                    text = "Retry",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
+            // Show retry button only if onRetry is provided
+            onRetry?.let { retryAction ->
+                Button(
+                    onClick = retryAction,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(SplashConstants.ERROR_BUTTON_COLOR)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(SplashConstants.ERROR_BUTTON_HEIGHT_DP.dp)
+                ) {
+                    Text(
+                        text = "Retry",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
             }
         }
     }

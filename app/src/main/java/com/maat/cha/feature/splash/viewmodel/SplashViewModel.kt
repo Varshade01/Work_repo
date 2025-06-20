@@ -7,7 +7,11 @@ import com.maat.cha.core.data.model.MatchViewResponse
 import com.maat.cha.core.network.repository.MatchViewRepository
 import com.maat.cha.feature.splash.events.SplashEvents
 import com.maat.cha.feature.splash.navigations.SplashNavigationActions
+import com.maat.cha.feature.splash.state.SplashError
 import com.maat.cha.feature.splash.state.SplashState
+import com.maat.cha.feature.splash.state.SplashUiState
+import com.maat.cha.feature.splash.utils.SplashConstants
+import com.maat.cha.feature.splash.utils.SplashUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +20,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for the splash screen feature
+ * Handles API calls, state management, and user interactions
+ */
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val navigationActions: SplashNavigationActions,
@@ -25,157 +33,230 @@ class SplashViewModel @Inject constructor(
     private val _state = MutableStateFlow(SplashState())
     val state: StateFlow<SplashState> = _state.asStateFlow()
 
+    /**
+     * Handles all events from the UI
+     */
     fun onEvent(event: SplashEvents) {
-        Log.d("SplashViewModel", "Received event: $event")
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Received event: $event")
+        
         when (event) {
-            is SplashEvents.OnDelayComplete -> {
-                Log.d("SplashViewModel", "Delay complete, starting API call")
-                _state.update { it.copy(isLoading = false) }
-                fetchMatchView()
+            is SplashEvents.OnSplashDelayComplete -> {
+                handleSplashDelayComplete()
             }
-
-            is SplashEvents.OnRetryApi -> {
-                Log.d("SplashViewModel", "Retrying API call")
-                fetchMatchView()
+            is SplashEvents.OnRetryApiCall -> {
+                handleRetryApiCall()
             }
-
-            is SplashEvents.OnBannerClick -> {
-                Log.d("SplashViewModel", "Banner clicked")
+            is SplashEvents.OnBannerClicked -> {
                 handleBannerClick()
             }
-
             is SplashEvents.OnWebViewBackPressed -> {
-                Log.d("SplashViewModel", "WebView back pressed")
                 handleWebViewBackPress()
             }
-
             is SplashEvents.OnBannerBackPressed -> {
-                Log.d("SplashViewModel", "Banner back pressed")
                 handleBannerBackPress()
             }
-
-            is SplashEvents.OnExternalNavigation -> {
-                Log.d("SplashViewModel", "External navigation detected")
-                _state.update { it.copy(hasNavigatedExternally = true) }
+            is SplashEvents.OnExternalNavigationDetected -> {
+                handleExternalNavigation()
             }
-
-            is SplashEvents.OnReturnFromExternal -> {
-                Log.d("SplashViewModel", "Return from external navigation")
+            is SplashEvents.OnReturnFromExternalNavigation -> {
                 handleReturnFromExternal()
             }
-
-            is SplashEvents.OnWebViewError -> {
-                Log.d("SplashViewModel", "WebView error - showing No Internet screen")
+            is SplashEvents.OnWebViewLoadError -> {
                 handleWebViewError()
             }
-        }
-    }
-
-    private fun fetchMatchView() {
-        Log.d("SplashViewModel", "Fetching match view")
-        _state.update { it.copy(isApiLoading = true, error = null) }
-        viewModelScope.launch {
-            val result = matchViewRepository.getMatchView()
-            result.fold(
-                onSuccess = { response ->
-                    Log.d("SplashViewModel", "API success: $response")
-                    handleMatchViewResponse(response)
-                },
-                onFailure = { exception ->
-                    Log.e("SplashViewModel", "API failure: ${exception.message}", exception)
-                    // If API fails, go to main screen (not show No Internet)
-                    viewModelScope.launch { navigationActions.navigateToMain() }
-                }
-            )
-        }
-    }
-
-    private fun handleMatchViewResponse(response: MatchViewResponse) {
-        // Store the original response for external navigation scenarios
-        _state.update { it.copy(originalApiResponse = response) }
-
-        // TEMPORARY: Test with Wikipedia URL
-        val testUrl = "https://uk.wikipedia.org/"
-        
-        when {
-            !response.launchLink.isNullOrBlank() && !response.matchImg.isNullOrBlank() -> {
-                Log.d("SplashViewModel", "Both link and image - open WebView with Wikipedia")
-                _state.update {
-                    it.copy(
-                        isApiLoading = false,
-                        showWebView = true,
-                        webViewUrl = response.launchLink // Use Wikipedia URL instead of response.launchLink
-                    )
-                }
+            is SplashEvents.OnApiResponseReceived -> {
+                handleApiResponse(event.response)
             }
-
-            response.launchLink.isNullOrBlank() && !response.matchImg.isNullOrBlank() -> {
-                Log.d("SplashViewModel", "Only image - show banner")
-                _state.update {
-                    it.copy(
-                        isApiLoading = false,
-                        showBanner = true,
-                        bannerUrl = response.matchImg
-                    )
-                }
-            }
-
-            !response.launchLink.isNullOrBlank() && response.matchImg.isNullOrBlank() -> {
-                Log.d("SplashViewModel", "Only link - open WebView with Wikipedia")
-                _state.update {
-                    it.copy(
-                        isApiLoading = false,
-                        showWebView = true,
-                        webViewUrl = response.launchLink // Use Wikipedia URL instead of response.launchLink
-                    )
-                }
-            }
-
-            else -> {
-                Log.d("SplashViewModel", "No data - navigating to main")
-                viewModelScope.launch { navigationActions.navigateToMain() }
+            is SplashEvents.OnApiError -> {
+                handleApiError(event.error)
             }
         }
     }
 
+    /**
+     * Handles splash delay completion
+     */
+    private fun handleSplashDelayComplete() {
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Splash delay complete, starting API call")
+        updateUiState(SplashUiState.ApiLoading)
+        fetchMatchView()
+    }
+
+    /**
+     * Handles API retry
+     */
+    private fun handleRetryApiCall() {
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Retrying API call")
+        updateUiState(SplashUiState.ApiLoading)
+        fetchMatchView()
+    }
+
+    /**
+     * Handles banner click
+     */
     private fun handleBannerClick() {
-        // Banner click always goes to main screen
-        // This is only for the case when only image comes (no link)
-        viewModelScope.launch { navigationActions.navigateToMain() }
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Banner clicked - navigating to main")
+        navigateToMain()
     }
 
+    /**
+     * Handles WebView back press
+     */
     private fun handleWebViewBackPress() {
-        // When exiting WebView, close the app (not go to main)
-        viewModelScope.launch { navigationActions.closeApp() }
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "WebView back pressed - closing app")
+        closeApp()
     }
 
+    /**
+     * Handles banner back press
+     */
     private fun handleBannerBackPress() {
-        // Banner back press also closes the app
-        viewModelScope.launch { navigationActions.closeApp() }
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Banner back pressed - closing app")
+        closeApp()
     }
 
+    /**
+     * Handles external navigation detection
+     */
+    private fun handleExternalNavigation() {
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "External navigation detected")
+        _state.update { it.copy(hasNavigatedExternally = true) }
+    }
+
+    /**
+     * Handles return from external navigation
+     */
     private fun handleReturnFromExternal() {
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Return from external navigation")
         val currentState = _state.value
+        
         if (currentState.originalApiResponse?.matchImg != null) {
-            _state.update {
-                it.copy(
-                    showBanner = true,
-                    bannerUrl = currentState.originalApiResponse?.matchImg,
-                    showWebView = false
-                )
-            }
+            updateUiState(SplashUiState.Banner(imageUrl = currentState.originalApiResponse.matchImg))
         } else {
-            viewModelScope.launch { navigationActions.closeApp() }
+            closeApp()
         }
     }
 
+    /**
+     * Handles WebView load error
+     */
     private fun handleWebViewError() {
-        // Show No Internet screen only when WebView fails to load
-        _state.update {
-            it.copy(
-                showWebView = false,
-                error = "No Internet connection"
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "WebView load error - showing error screen")
+        updateUiState(
+            SplashUiState.Error(
+                message = SplashError.WebViewLoadError.toUserMessage(),
+                isRetryable = SplashError.WebViewLoadError.isRetryable()
             )
+        )
+    }
+
+    /**
+     * Handles API response
+     */
+    private fun handleApiResponse(response: MatchViewResponse) {
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "API response received: $response")
+        
+        // Store original response for external navigation scenarios
+        _state.update { it.copy(originalApiResponse = response) }
+        
+        // Determine UI state based on response
+        val uiState = SplashUtils.determineUiState(response)
+        
+        when (uiState) {
+            is SplashUiState.WebView -> {
+                Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Showing WebView with URL: ${uiState.url}")
+                updateUiState(uiState)
+            }
+            is SplashUiState.Banner -> {
+                Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Showing banner with image: ${uiState.imageUrl}")
+                updateUiState(uiState)
+            }
+            is SplashUiState.Error -> {
+                Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "No valid content - navigating to main")
+                navigateToMain()
+            }
+            else -> {
+                Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Unexpected UI state - navigating to main")
+                navigateToMain()
+            }
+        }
+    }
+
+    /**
+     * Handles API error
+     */
+    private fun handleApiError(error: SplashError) {
+        Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "API error: ${error.toUserMessage()}")
+        
+        if (error.isRetryable()) {
+            updateUiState(
+                SplashUiState.Error(
+                    message = error.toUserMessage(),
+                    isRetryable = true
+                )
+            )
+        } else {
+            // Non-retryable error - navigate to main
+            navigateToMain()
+        }
+    }
+
+    /**
+     * Fetches match view data from API
+     */
+    private fun fetchMatchView() {
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Fetching match view data")
+        
+        viewModelScope.launch {
+            try {
+                val result = matchViewRepository.getMatchView()
+                result.fold(
+                    onSuccess = { response ->
+                        onEvent(SplashEvents.OnApiResponseReceived(response))
+                    },
+                    onFailure = { exception ->
+                        val error = SplashUtils.mapExceptionToError(exception)
+                        onEvent(SplashEvents.OnApiError(error))
+                    }
+                )
+            } catch (exception: Exception) {
+                Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "Unexpected error in fetchMatchView", exception)
+                val error = SplashUtils.mapExceptionToError(exception)
+                onEvent(SplashEvents.OnApiError(error))
+            }
+        }
+    }
+
+    /**
+     * Updates the UI state
+     */
+    private fun updateUiState(uiState: SplashUiState) {
+        _state.update { it.copy(uiState = uiState) }
+    }
+
+    /**
+     * Navigates to main screen
+     */
+    private fun navigateToMain() {
+        viewModelScope.launch {
+            try {
+                navigationActions.navigateToMain()
+            } catch (exception: Exception) {
+                Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "Error navigating to main", exception)
+            }
+        }
+    }
+
+    /**
+     * Closes the app
+     */
+    private fun closeApp() {
+        viewModelScope.launch {
+            try {
+                navigationActions.closeApp()
+            } catch (exception: Exception) {
+                Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "Error closing app", exception)
+            }
         }
     }
 } 
