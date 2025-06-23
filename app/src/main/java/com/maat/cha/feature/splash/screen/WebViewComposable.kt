@@ -3,7 +3,6 @@ package com.maat.cha.feature.splash.screen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Message
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -17,7 +16,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,39 +36,58 @@ fun WebViewComposable(
     onWebViewError: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    
-    // Enable WebView debugging for development
-    LaunchedEffect(Unit) {
-        WebView.setWebContentsDebuggingEnabled(true)
-    }
-
     var webView by remember { mutableStateOf<WebView?>(null) }
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
+    var showNoInternet by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
     // Handle back button with double-tap exit
     BackHandler {
-        handleBackPress(
-            webView = webView,
-            lastBackPressTime = lastBackPressTime,
-            onBackPressed = onBackPressed,
-            onTimeUpdate = { lastBackPressTime = it },
-            context = context
-        )
+        if (showNoInternet) {
+            // If showing no internet screen, go back to main app
+            onBackPressed()
+        } else {
+            handleBackPress(
+                webView = webView,
+                lastBackPressTime = lastBackPressTime,
+                onBackPressed = onBackPressed,
+                onTimeUpdate = { lastBackPressTime = it },
+                context = context
+            )
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { ctx ->
-                createWebView(
-                    context = ctx,
-                    url = url,
-                    onWebViewCreated = { webView = it },
-                    onError = onWebViewError,
-                    onExternalNavigation = onExternalNavigation
-                )
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+        if (showNoInternet) {
+            // Show No Internet screen
+            ErrorScreen(
+                errorMessage = "No internet connection. Please check your connection and try again.",
+                onRetry = {
+                    showNoInternet = false
+                    isLoading = true
+                    webView?.reload()
+                }
+            )
+        } else {
+            // Show WebView
+            AndroidView(
+                factory = { ctx ->
+                    createWebView(
+                        context = ctx,
+                        url = url,
+                        onWebViewCreated = { webView = it },
+                        onError = {
+                            showNoInternet = true
+                            onWebViewError()
+                        },
+                        onLoadStarted = { isLoading = true },
+                        onLoadFinished = { isLoading = false },
+                        onExternalNavigation = onExternalNavigation
+                    )
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
@@ -80,19 +97,23 @@ private fun createWebView(
     url: String,
     onWebViewCreated: (WebView) -> Unit,
     onError: () -> Unit,
+    onLoadStarted: () -> Unit,
+    onLoadFinished: () -> Unit,
     onExternalNavigation: () -> Unit
 ): WebView {
     return WebView(context).apply {
         onWebViewCreated(this)
-        
+
         configureWebViewSettings()
         configureCookies()
         configureWebViewClient(
             onError = onError,
+            onLoadStarted = onLoadStarted,
+            onLoadFinished = onLoadFinished,
             onExternalNavigation = onExternalNavigation
         )
         configureWebChromeClient()
-        
+
         loadUrl(url)
         setupFocus()
     }
@@ -136,16 +157,40 @@ private fun WebView.configureCookies() {
 
 private fun WebView.configureWebViewClient(
     onError: () -> Unit,
+    onLoadStarted: () -> Unit,
+    onLoadFinished: () -> Unit,
     onExternalNavigation: () -> Unit
 ) {
     webViewClient = object : WebViewClient() {
+        override fun onPageStarted(
+            view: WebView?,
+            url: String?,
+            favicon: android.graphics.Bitmap?
+        ) {
+            super.onPageStarted(view, url, favicon)
+            onLoadStarted()
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            super.onPageFinished(view, url)
+            onLoadFinished()
+        }
+
         override fun onReceivedError(
             view: WebView?,
             request: WebResourceRequest?,
             error: WebResourceError?
         ) {
             super.onReceivedError(view, request, error)
-            onError()
+
+            // Only trigger error for main frame requests (not sub-resources)
+            if (request?.isForMainFrame == true) {
+                // Check if it's a network-related error
+                val errorCode = error?.errorCode ?: 0
+                if (isNetworkError(errorCode)) {
+                    onError()
+                }
+            }
         }
 
         override fun shouldOverrideUrlLoading(
@@ -182,6 +227,27 @@ private fun WebView.setupFocus() {
     isFocusable = true
     isFocusableInTouchMode = true
     requestFocus()
+}
+
+/**
+ * Checks if the error code represents a network-related error
+ */
+private fun isNetworkError(errorCode: Int): Boolean {
+    return when (errorCode) {
+        WebViewClient.ERROR_HOST_LOOKUP,
+        WebViewClient.ERROR_CONNECT,
+        WebViewClient.ERROR_TIMEOUT,
+        WebViewClient.ERROR_REDIRECT_LOOP,
+        WebViewClient.ERROR_UNSUPPORTED_SCHEME,
+        WebViewClient.ERROR_FAILED_SSL_HANDSHAKE,
+        WebViewClient.ERROR_BAD_URL,
+        WebViewClient.ERROR_FILE_NOT_FOUND,
+        WebViewClient.ERROR_FILE,
+        WebViewClient.ERROR_PROXY_AUTHENTICATION,
+        WebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME -> true
+
+        else -> false
+    }
 }
 
 private fun handleUrlLoading(
@@ -241,7 +307,8 @@ private fun handleBackPress(
                 onBackPressed()
             } else {
                 onTimeUpdate(now)
-                Toast.makeText(context, SplashConstants.TOAST_PRESS_BACK_AGAIN, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, SplashConstants.TOAST_PRESS_BACK_AGAIN, Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
