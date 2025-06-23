@@ -2,6 +2,7 @@ package com.maat.cha.feature.settings.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.maat.cha.core.audio.AudioManager
 import com.maat.cha.core.datastore.utils.DataStorePreferences
 import com.maat.cha.core.navigation.destinations.InfoType
 import com.maat.cha.core.navigation.destinations.ReferenceInfoSource
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val navigationActions: SettingsNavigationActions,
-    private val dataStorePreferences: DataStorePreferences
+    private val dataStorePreferences: DataStorePreferences,
+    private val audioManager: AudioManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -45,11 +47,13 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvents.OnMusicToggle -> {
                 viewModelScope.launch {
                     dataStorePreferences.setMusicEnabled(event.enabled)
+                    audioManager.updateMusicSetting(event.enabled)
                 }
             }
             is SettingsEvents.OnVfxToggle -> {
                 viewModelScope.launch {
                     dataStorePreferences.setVfxEnabled(event.enabled)
+                    audioManager.updateVfxSetting(event.enabled)
                 }
             }
             is SettingsEvents.OnBackClick -> {

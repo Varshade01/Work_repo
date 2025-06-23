@@ -2,6 +2,7 @@ package com.maat.cha.feature.game.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.maat.cha.core.audio.AudioManager
 import com.maat.cha.core.navigation.destinations.InfoType
 import com.maat.cha.core.navigation.destinations.ReferenceInfoSource
 import com.maat.cha.feature.game.dialogs.model.GameDialogType
@@ -21,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class GameViewModel @Inject constructor(
     private val navigationActions: GameNavigationActions,
-    private val dataStorePreferences: com.maat.cha.core.datastore.utils.DataStorePreferences
+    private val dataStorePreferences: com.maat.cha.core.datastore.utils.DataStorePreferences,
+    private val audioManager: AudioManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -309,6 +311,9 @@ class GameViewModel @Inject constructor(
         val totalCollectedFruits = allCollectedFruits.size / 3 // Count unique fruit types
         val newCoins = totalCollectedFruits * 100 // 100 coins per fruit type
         val updatedTotalCoins = currentState.totalCoins + newCoins // Add to existing coins
+
+        // Play coin sound when Total Win dialog appears
+        audioManager.playCoinSound()
 
         // Show total win dialog
         val dialog = GameDialogType.TotalWin(updatedTotalCoins)

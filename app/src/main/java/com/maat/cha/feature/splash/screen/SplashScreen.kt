@@ -68,6 +68,8 @@ fun SplashScreen(
             }
 
             is SplashUiState.Error -> {
+                // This error state is now only used for non-WebView errors
+                // WebView errors are handled within the WebViewComposable
                 ErrorContent(
                     errorMessage = uiState.message,
                     isRetryable = uiState.isRetryable,
@@ -80,7 +82,11 @@ fun SplashScreen(
                     url = uiState.url,
                     onBackPressed = { viewModel.onEvent(SplashEvents.OnWebViewBackPressed) },
                     onExternalNavigation = { viewModel.onEvent(SplashEvents.OnExternalNavigationDetected) },
-                    onWebViewError = { viewModel.onEvent(SplashEvents.OnWebViewLoadError) }
+                    onWebViewError = { 
+                        // WebView errors are now handled within the WebViewComposable
+                        // This callback is kept for logging purposes
+                        viewModel.onEvent(SplashEvents.OnWebViewLoadError) 
+                    }
                 )
             }
 
@@ -182,21 +188,22 @@ private fun BannerContent(
  */
 @Composable
 private fun HideSystemBars() {
-    val window = (LocalView.current.context as? Activity)?.window
-    DisposableEffect(window) {
-        window?.let {
-            val controller = WindowInsetsControllerCompat(it, it.decorView)
-            WindowCompat.setDecorFitsSystemWindows(it, false)
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val activity = view.context as? Activity
+        activity?.let {
+            WindowCompat.setDecorFitsSystemWindows(it.window, false)
+            WindowInsetsControllerCompat(it.window, it.window.decorView).apply {
+                hide(WindowInsetsCompat.Type.systemBars())
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
         }
         onDispose { }
     }
 }
 
-@Preview
 @Composable
-private fun PreviewSplashScreen() {
-    SplashScreen()
+@Preview
+fun SplashScreenPreview() {
+    SplashContent()
 }

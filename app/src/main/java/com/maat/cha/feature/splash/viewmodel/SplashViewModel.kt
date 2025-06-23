@@ -138,7 +138,7 @@ class SplashViewModel @Inject constructor(
     }
 
     /**
-     * Handles WebView load error
+     * Handles WebView load error - shows error screen only for WebView
      */
     private fun handleWebViewError() {
         Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "WebView load error - showing error screen")
@@ -183,22 +183,15 @@ class SplashViewModel @Inject constructor(
     }
 
     /**
-     * Handles API error
+     * Handles API error - never block navigation, always proceed to main app
      */
     private fun handleApiError(error: SplashError) {
         Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "API error: ${error.toUserMessage()}")
         
-        if (error.isRetryable()) {
-            updateUiState(
-                SplashUiState.Error(
-                    message = error.toUserMessage(),
-                    isRetryable = true
-                )
-            )
-        } else {
-            // Non-retryable error - navigate to main
-            navigateToMain()
-        }
+        // Always navigate to main app regardless of API error
+        // This ensures users can always access the app even without internet
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "API error occurred - navigating to main app")
+        navigateToMain()
     }
 
     /**

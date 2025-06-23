@@ -11,12 +11,18 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.maat.cha.core.audio.AudioManager
 import com.maat.cha.core.navigation.root.Root
 import com.maat.cha.ui.theme.MaatchaTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var audioManager: AudioManager
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -37,5 +43,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        audioManager.pauseBackgroundMusic()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        audioManager.resumeBackgroundMusic()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        audioManager.release()
     }
 }
