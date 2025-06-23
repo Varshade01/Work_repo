@@ -17,52 +17,66 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.appinfo.model.InfoScreenType
+import com.maat.cha.feature.appinfo.viewmodel.InfoViewModel
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CardInfo
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.Title
 
 @Composable
-fun InfoScreen() {
-    //AppInfoScreenUI()
+fun InfoScreen(
+    screenType: InfoScreenType,
+    viewModel: InfoViewModel = hiltViewModel()
+) {
+    InfoScreenUI(
+        screenType = screenType,
+        onMainButtonClick = { viewModel.onMainButtonClick(screenType) },
+        onBottomTextClick = { viewModel.onBottomTextClick() },
+        onBackClick = { viewModel.onBottomTextClick() }
+    )
 }
 
 @Composable
 fun InfoScreenUI(
     screenType: InfoScreenType,
     onMainButtonClick: () -> Unit = {},
-    onBottomTextClick: () -> Unit = {}
+    onBottomTextClick: () -> Unit = {},
+    onBackClick: () -> Unit = {}
 ) {
     var isPrivacyExpanded by remember { mutableStateOf(false) }
 
+    val isPrivacy = screenType is InfoScreenType.Privacy
+    val isPrivacyExpandedState = isPrivacy && isPrivacyExpanded
+
     val title = stringResource(screenType.titleRes)
     val content = when {
-        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
-            stringResource(R.string.how_to_play)
-
+        isPrivacyExpandedState ->
+            stringResource(R.string.privacy_policy_content)
         else -> stringResource(screenType.contentRes)
     }
 
     val mainButtonText = when {
-        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+        isPrivacyExpandedState ->
             stringResource(R.string.agree)
-
         else -> stringResource(screenType.mainButtonTextRes)
     }
 
     val bottomText = when {
-        screenType is InfoScreenType.Privacy && isPrivacyExpanded ->
+        isPrivacyExpandedState ->
             stringResource(R.string.text_reject)
-
-        screenType is InfoScreenType.Privacy && !isPrivacyExpanded ->
+        isPrivacy && !isPrivacyExpanded ->
             null
-
         screenType.bottomBtnTextRes != null ->
             stringResource(screenType.bottomBtnTextRes)
-
         else -> null
+    }
+
+    val handleBottomTextClick = when {
+        isPrivacyExpandedState -> ({ isPrivacyExpanded = false })
+        else -> onBottomTextClick
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -72,7 +86,7 @@ fun InfoScreenUI(
         )
 
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onBackClick,
             iconRes = R.drawable.ic_btn_previous,
             contentDescription = "btn previous",
             modifier = Modifier
@@ -107,12 +121,12 @@ fun InfoScreenUI(
             modifier = Modifier.align(Alignment.Center),
             mainButtonText = mainButtonText,
             onMainButtonClick = onMainButtonClick,
-            onBottomTextClick = onBottomTextClick,
-            centerContent = screenType is InfoScreenType.Privacy && !isPrivacyExpanded,
-            showPrivacyPolicyLink = screenType is InfoScreenType.Privacy && !isPrivacyExpanded,
-            onPrivacyPolicyClick = {
-                isPrivacyExpanded = true
-            }
+            onBottomTextClick = handleBottomTextClick,
+            centerContent = isPrivacy && !isPrivacyExpanded,
+            showPrivacyPolicyLink = isPrivacy && !isPrivacyExpanded,
+            onPrivacyPolicyClick = if (isPrivacy && !isPrivacyExpanded) {
+                { isPrivacyExpanded = true }
+            } else null
         )
     }
 }

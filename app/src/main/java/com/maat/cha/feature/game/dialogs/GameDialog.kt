@@ -42,14 +42,16 @@ import com.maat.cha.R
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.MainButton
 import com.maat.cha.feature.game.dialogs.model.GameDialogType
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun GameDialog(
     type: GameDialogType,
     onMainClick: () -> Unit,
+    onInfoClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Dialog(onDismissRequest = { /* TODO */ }) {
+    Dialog(onDismissRequest = { /* Dialog cannot be dismissed by clicking outside */ }) {
         Card(
             modifier = modifier
                 .fillMaxSize()
@@ -72,17 +74,40 @@ fun GameDialog(
                         Text(
                             text = "Round ${type.roundNumber}\nfinished",
                             fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_star_shine),
-                            contentDescription = null,
-                            modifier = Modifier.size(164.dp)
-                        )
+                        
+                        // Show collected fruit if available, otherwise show star
+                        val iconRes = if (type.collectedFruits.isNotEmpty()) {
+                            type.collectedFruits.first() // Show the first collected fruit
+                        } else {
+                            R.drawable.ic_star_shine // Fallback to star
+                        }
+                        
+                        Box(
+                            modifier = Modifier.size(146.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Background for collected fruit
+                            if (type.collectedFruits.isNotEmpty()) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.highlighted_items_background),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(184.dp), // Background size
+                                    contentScale = ContentScale.FillBounds
+                                )
+                            }
+                            
+                            Image(
+                                painter = painterResource(id = iconRes),
+                                contentDescription = null,
+                                modifier = Modifier.size(84.dp) // Smaller fruit icon
+                            )
+                        }
                         Spacer(modifier = Modifier.height(24.dp))
                         MainButton(
                             onClick = onMainClick,
@@ -168,7 +193,7 @@ fun GameDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             CircularIconButton(
-                                onClick = { /* TODO: info click */ },
+                                onClick = onInfoClick,
                                 iconRes = R.drawable.ic_btn_info,
                                 contentDescription = "Info",
                                 modifier = Modifier.size(24.dp),
@@ -204,12 +229,15 @@ fun GameDialog(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
+                                // Top row showing counts for each round
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    for (i in 1..totalItems) {
+                                    for (i in 0 until totalItems) {
+                                        val collectedFruits = type.columns.getOrNull(i) ?: emptyList()
+                                        val collectedCount = collectedFruits.size / 3 // Count unique fruit types
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
@@ -220,14 +248,13 @@ fun GameDialog(
                                                     shape = RoundedCornerShape(16.dp)
                                                 )
                                                 .background(
-                                                    color = if (i == selectedIndex) Color(0xFFFDB001) else Color.Transparent,
+                                                    color = if (collectedCount > 0) Color(0xFFFDB001) else Color.Transparent,
                                                     shape = RoundedCornerShape(16.dp)
-                                                )
-                                                .clickable { selectedIndex = i },
+                                                ),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
-                                                text = "0",
+                                                text = collectedCount.toString(),
                                                 fontSize = 14.sp,
                                                 color = Color.White
                                             )
@@ -235,6 +262,7 @@ fun GameDialog(
                                     }
                                 }
 
+                                // Bottom row showing collected fruits for each round
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -256,12 +284,26 @@ fun GameDialog(
                                                 horizontalAlignment = Alignment.CenterHorizontally,
                                                 modifier = Modifier.fillMaxWidth()
                                             ) {
-                                                for (resId in columnIcons) {
-                                                    Image(
-                                                        painter = painterResource(id = resId),
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(32.dp)
-                                                    )
+                                                if (columnIcons.isNotEmpty()) {
+                                                    // Show collected fruits (always show 3 slots)
+                                                    repeat(3) { index ->
+                                                        if (index < columnIcons.size) {
+                                                            // Show collected fruit
+                                                            Image(
+                                                                painter = painterResource(id = columnIcons[index]),
+                                                                contentDescription = null,
+                                                                modifier = Modifier.size(32.dp)
+                                                            )
+                                                        } else {
+                                                            // Show empty slot
+                                                            Box(modifier = Modifier.size(32.dp))
+                                                        }
+                                                    }
+                                                } else {
+                                                    // Show empty slots
+                                                    repeat(3) {
+                                                        Box(modifier = Modifier.size(32.dp))
+                                                    }
                                                 }
                                             }
                                         }

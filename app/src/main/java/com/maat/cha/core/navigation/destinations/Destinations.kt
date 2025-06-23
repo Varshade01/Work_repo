@@ -26,4 +26,26 @@ sealed class Destination(val route: String, vararg params: String) {
     object Settings : Destination("settings")
     object Main : Destination("main")
     object Splash : Destination("splash")
+    object Info : Destination("info/{type}", "type") {
+        fun createRoute(type: InfoType) = withArgs(type.name)
+    }
+    object ReferenceInfo : Destination("reference_info/{type}/{source}", "type", "source") {
+        fun createRoute(type: InfoType, source: ReferenceInfoSource = ReferenceInfoSource.ONBOARDING) = withArgs(type.name, source.name)
+    }
+    object Game : Destination("game")
+}
+
+enum class InfoType {
+    HOW_TO_PLAY,
+    TERMS_OF_USE,
+    PRIVACY,
+    PRIVACY_POLICY,
+    TERMS_OF_USE_POLICY
+}
+
+enum class ReferenceInfoSource {
+    ONBOARDING,
+    MAIN,
+    GAME,
+    SETTINGS
 }

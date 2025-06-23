@@ -1,10 +1,8 @@
 package com.maat.cha.feature.game.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,43 +15,76 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.MainButton
 import com.maat.cha.feature.composable.Title
+import com.maat.cha.feature.game.components.AnimatedGameField
+import com.maat.cha.feature.game.components.CollectionItemsSection
+import com.maat.cha.feature.game.dialogs.GameDialog
+import com.maat.cha.feature.game.events.GameEvents
+import com.maat.cha.feature.game.viewmodel.GameViewModel
 import com.maat.cha.ui.theme.Orange_light
 
 @Composable
-fun GameScreen() {
-    GameScreenUI()
+fun GameScreen(
+    viewModel: GameViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+
+    GameScreenUI(
+        state = state,
+        onBackClick = { viewModel.onBackClick() },
+        onInfoClick = { viewModel.onEvent(GameEvents.OnInfoClick) },
+        onStartClick = { viewModel.onEvent(GameEvents.OnStartClick) },
+        onNextRoundClick = { viewModel.onEvent(GameEvents.OnNextRoundClick) },
+        onAgainClick = { viewModel.onEvent(GameEvents.OnAgainClick) },
+        onCollectRulesClick = { viewModel.onCollectRulesClick() },
+        onRoundSelect = { round -> viewModel.onEvent(GameEvents.OnRoundSelect(round)) }
+    )
 }
 
 @Composable
-fun GameScreenUI() {
+fun GameScreenUI(
+    state: com.maat.cha.feature.game.state.GameState,
+    onBackClick: () -> Unit = {},
+    onInfoClick: () -> Unit = {},
+    onStartClick: () -> Unit = {},
+    onNextRoundClick: () -> Unit = {},
+    onAgainClick: () -> Unit = {},
+    onCollectRulesClick: () -> Unit = {},
+    onRoundSelect: (Int) -> Unit = {}
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
             backgroundRes = R.drawable.background_app,
             modifier = Modifier.matchParentSize()
         )
 
+        // Blur background when dialog is visible
+        if (state.isDialogVisible) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(radius = 8.dp)
+            )
+        }
+
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onBackClick,
             iconRes = R.drawable.ic_btn_previous,
             contentDescription = "btn previous",
             modifier = Modifier
@@ -64,7 +95,7 @@ fun GameScreenUI() {
             sizeItem = 56
         )
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onInfoClick,
             iconRes = R.drawable.ic_btn_info,
             contentDescription = "btn info",
             modifier = Modifier
@@ -76,7 +107,7 @@ fun GameScreenUI() {
         )
 
         Title(
-            text = stringResource(R.string.game_points),
+            text = state.totalCoins.toString(),
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 16.dp),
@@ -85,31 +116,91 @@ fun GameScreenUI() {
             icon = R.drawable.ic_coin,
             widthItem = 180.dp
         )
-        CollectRuiles(modifier = Modifier.align(Alignment.Center))
 
+        // Game content
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Rounds indicator
+            GameRoundsIndicator(
+                currentRound = state.currentRound,
+                totalRounds = state.totalRounds,
+                isGameStarted = state.isGameStarted,
+                onRoundSelect = onRoundSelect
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Animated game field
+            AnimatedGameField(
+                gameField = state.gameField,
+                isSpinning = state.isSpinning,
+                currentRound = state.currentRound,
+                matchedItems = state.matchedItems,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Collection items section
+            CollectionItemsSection(
+                modifier = Modifier.padding(bottom = 32.dp),
+                totalRounds = state.totalRounds,
+                collectedFruitsPerRound = state.collectedFruitsPerRound,
+                selectedColor = Orange_light,
+                unselectedColor = Color.Transparent,
+                borderColor = Color.White,
+                cornerRadiusSelection = 16.dp,
+                boxWidth = 92.dp,
+                boxHeight = 132.dp,
+                backgroundColor = Color(0xC6FF6AC3),
+                iconSize = 32.dp,
+                cornerRadiusFruits = 12.dp
+            )
+        }
+
+        // Start button
         MainButton(
-            onClick = { /* TODO */ },
+            onClick = onStartClick,
             fontWeight = FontWeight.Bold,
             fontSize = 32.sp,
-            btnText = "Start",
+            btnText = if (state.isGameStarted) "SPINNING..." else "Start",
             textColor = Color.White,
             backgroundRes = R.drawable.background_btn,
             modifier = Modifier
                 .padding(32.dp)
                 .align(Alignment.BottomCenter),
-            contentDescription = "Main screen btn",
-            buttonWidth = 320.dp
+            contentDescription = "Start button",
+            buttonWidth = 320.dp,
+            enabled = !state.isGameStarted
         )
+
+        // Game dialog
+        if (state.isDialogVisible && state.currentDialog != null) {
+            GameDialog(
+                type = state.currentDialog,
+                onMainClick = {
+                    when (state.currentDialog) {
+                        is com.maat.cha.feature.game.dialogs.model.GameDialogType.RoundFinished -> onNextRoundClick()
+                        is com.maat.cha.feature.game.dialogs.model.GameDialogType.TotalWin -> onAgainClick()
+                        is com.maat.cha.feature.game.dialogs.model.GameDialogType.CollectRuiles -> onCollectRulesClick()
+                    }
+                },
+                onInfoClick = onInfoClick
+            )
+        }
     }
 }
 
 @Composable
-fun GameSurface(modifier: Modifier = Modifier) {
-    var currentRound by rememberSaveable { mutableIntStateOf(1) }
-    val totalRounds = 4
-
+fun GameRoundsIndicator(
+    currentRound: Int,
+    totalRounds: Int,
+    isGameStarted: Boolean,
+    onRoundSelect: (Int) -> Unit
+) {
     Column(
-        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -135,7 +226,7 @@ fun GameSurface(modifier: Modifier = Modifier) {
                             color = if (i == currentRound) Color(0xFFD157B5) else Color(0xFF330227),
                             shape = RoundedCornerShape(18.dp)
                         )
-                        .clickable { currentRound = i }
+                        .clickable(enabled = !isGameStarted) { onRoundSelect(i) }
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -155,142 +246,13 @@ fun GameSurface(modifier: Modifier = Modifier) {
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Box(
-            modifier = Modifier
-                .size(width = 340.dp, height = 340.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            BackgroundApp(
-                backgroundRes = R.drawable.background_surface_game,
-                modifier = Modifier.matchParentSize()
-            )
-        }
-    }
-}
-
-@Composable
-fun CollectRuiles(modifier: Modifier) {
-    Column(
-        modifier = modifier
-            .padding(bottom = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        GameSurface(modifier = Modifier)
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        var selectedIcon by rememberSaveable { mutableIntStateOf(1) }
-        SelectionAndFruitsSection(
-            totalItems = 3,
-            currentItem = selectedIcon,
-            onItemClick = { selectedIcon = it },
-            selectedColor = Orange_light,
-            unselectedColor = Color.Transparent,
-            borderColor = Color.White,
-            cornerRadiusSelection = 16.dp,
-            fruitIconResList = listOf(
-                R.drawable.ic_raspberry,
-                R.drawable.ic_star,
-                R.drawable.ic_plum
-            ),
-            boxWidth = 92.dp,
-            boxHeight = 132.dp,
-            backgroundColor = Color(0xC6FF6AC3),
-            iconSize = 32.dp,
-            cornerRadiusFruits = 12.dp
-        )
-    }
-}
-
-@Composable
-fun SelectionAndFruitsSection(
-    modifier: Modifier = Modifier,
-    totalItems: Int,
-    currentItem: Int,
-    onItemClick: (Int) -> Unit,
-    selectedColor: Color,
-    unselectedColor: Color,
-    borderColor: Color,
-    cornerRadiusSelection: Dp,
-    fruitIconResList: List<Int>,
-    boxWidth: Dp,
-    boxHeight: Dp,
-    backgroundColor: Color,
-    iconSize: Dp,
-    cornerRadiusFruits: Dp
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Selection row (transparent background, no connectors)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (i in 1..totalItems) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 76.dp, height = 32.dp)
-                        .border(
-                            width = 1.dp,
-                            color = borderColor,
-                            shape = RoundedCornerShape(cornerRadiusSelection)
-                        )
-                        .background(
-                            color = if (i == currentItem) selectedColor else unselectedColor,
-                            shape = RoundedCornerShape(cornerRadiusSelection)
-                        )
-                        .clickable { onItemClick(i) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = i.toString(),
-                        fontSize = 14.sp,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            fruitIconResList.forEach { resId ->
-                Box(
-                    modifier = Modifier
-                        .size(width = boxWidth, height = boxHeight)
-                        .background(
-                            color = backgroundColor,
-                            shape = RoundedCornerShape(cornerRadiusFruits)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        repeat(3) {
-                            Image(
-                                painter = painterResource(id = resId),
-                                contentDescription = null,
-                                modifier = Modifier.size(iconSize),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameScreenUI() {
-    GameScreenUI()
+    GameScreenUI(
+        state = com.maat.cha.feature.game.state.GameState()
+    )
 }

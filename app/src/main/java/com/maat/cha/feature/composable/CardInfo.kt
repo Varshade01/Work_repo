@@ -1,14 +1,18 @@
 package com.maat.cha.feature.composable
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -40,79 +44,97 @@ fun CardInfo(
     showPrivacyPolicyLink: Boolean = false,
     centerContent: Boolean = false
 ) {
+    val scrollState = rememberScrollState()
     Box(
         modifier = modifier
-            .width(360.dp)
-            .height(640.dp)
+            .fillMaxWidth(0.9f)
+            .heightIn(min = 320.dp, max = 480.dp)
     ) {
-        // Картка з контентом
         Card(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(24.dp),
             elevation = CardDefaults.cardElevation(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = if (centerContent) Alignment.Center else Alignment.TopStart
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = textContent,
-                    fontSize = fontSizeTextContent,
-                    color = Color.Black,
-                    modifier = Modifier.padding(24.dp),
-                    textAlign = if (centerContent) TextAlign.Center else TextAlign.Start
-                )
-            }
-        }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            if (showPrivacyPolicyLink && onPrivacyPolicyClick != null) {
-                Text(
-                    text = stringResource(R.string.privacy_policy),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    textDecoration = TextDecoration.Underline,
-                    color = Color.Black,
+                Box(
                     modifier = Modifier
-                        .clickable { onPrivacyPolicyClick() }
-                )
-                Spacer(modifier = Modifier.height(48.dp))
-            }
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState),
+                    contentAlignment = if (centerContent) Alignment.Center else Alignment.TopStart
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = if (centerContent) Alignment.CenterHorizontally else Alignment.Start
+                    ) {
+                        Text(
+                            text = textContent,
+                            fontSize = fontSizeTextContent,
+                            color = Color.Black,
+                            textAlign = if (centerContent) TextAlign.Center else TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (showPrivacyPolicyLink && onPrivacyPolicyClick != null) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = stringResource(R.string.privacy_policy),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                textDecoration = TextDecoration.Underline,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .clickable { onPrivacyPolicyClick() }
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
 
+                Spacer(modifier = Modifier.height(16.dp))
 
-            MainButton(
-                onClick = onMainButtonClick,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                btnText = mainButtonText,
-                textColor = Color.White,
-                backgroundRes = R.drawable.background_btn,
-                contentDescription = null,
-                buttonWidth = 300.dp,
-                buttonHeight = 56.dp
-            )
-
-            if (!bottomTitleText.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(18.dp))
-                Text(
-                    text = bottomTitleText,
-                    fontSize = fontSizeBottomTitleText,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.clickable { onBottomTextClick() }
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    MainButton(
+                        onClick = onMainButtonClick,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp,
+                        btnText = mainButtonText,
+                        textColor = Color.White,
+                        backgroundRes = R.drawable.background_btn,
+                        contentDescription = null,
+                        buttonWidth = 300.dp,
+                        buttonHeight = 56.dp,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                    if (!bottomTitleText.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(18.dp))
+                        Text(
+                            text = bottomTitleText,
+                            fontSize = fontSizeBottomTitleText,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier
+                                .clickable { onBottomTextClick() }
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
 }
-
 
 @Composable
 @Preview

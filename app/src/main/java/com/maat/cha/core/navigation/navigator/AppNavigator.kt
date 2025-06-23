@@ -16,4 +16,6 @@ interface AppNavigator {
         inclusive: Boolean = false,
         isSingleTop: Boolean = false,
     )
+
+    suspend fun minimizeApp()
 }

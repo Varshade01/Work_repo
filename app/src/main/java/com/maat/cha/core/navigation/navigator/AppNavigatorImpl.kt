@@ -31,4 +31,8 @@ class AppNavigatorImpl @Inject constructor() : AppNavigator {
             )
         )
     }
+
+    override suspend fun minimizeApp() {
+        navigationFlow.emit(NavigationIntent.MinimizeApp)
+    }
 }

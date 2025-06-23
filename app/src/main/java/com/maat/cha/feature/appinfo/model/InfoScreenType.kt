@@ -28,5 +28,17 @@ sealed class InfoScreenType(
         bottomBtnTextRes = R.string.text_reject,
         mainButtonTextRes = R.string.accept
     )
+
+    object PrivacyPolicy : InfoScreenType(
+        titleRes = R.string.title_privacy,
+        contentRes = R.string.privacy_policy_content,
+        mainButtonTextRes = R.string.got_it
+    )
+
+    object TermsOfUsePolicy : InfoScreenType(
+        titleRes = R.string.title_terms_of_use,
+        contentRes = R.string.terms_of_use_content,
+        mainButtonTextRes = R.string.got_it
+    )
 }
 

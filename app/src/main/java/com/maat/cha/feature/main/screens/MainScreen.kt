@@ -7,28 +7,51 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.LogoItem
 import com.maat.cha.feature.composable.MainButton
+import com.maat.cha.feature.main.events.MainEvents
+import com.maat.cha.feature.main.viewmodel.MainViewModel
 import com.maat.cha.ui.theme.Orange
 
 @Composable
-fun MainScreen() {
-    MainScreenUI()
+fun MainScreen(
+    viewModel: MainViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    MainScreenUI(
+        totalCoins = state.totalCoins,
+        onBackClick = { viewModel.onEvent(MainEvents.OnBackClick) },
+        onSettingsClick = { viewModel.onEvent(MainEvents.OnSettingsClick) },
+        onPlayClick = { viewModel.onEvent(MainEvents.OnPlayClick) },
+        onHowToPlayClick = { viewModel.onEvent(MainEvents.OnHowToPlayClick) }
+    )
 }
 
 @Composable
-fun MainScreenUI() {
+fun MainScreenUI(
+    totalCoins: Int = 0,
+    onBackClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onPlayClick: () -> Unit = {},
+    onHowToPlayClick: () -> Unit = {}
+) {
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
             backgroundRes = R.drawable.background_app,
@@ -42,7 +65,7 @@ fun MainScreenUI() {
         )
 
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onBackClick,
             iconRes = R.drawable.ic_btn_previous,
             contentDescription = "btn previous",
             modifier = Modifier
@@ -56,9 +79,9 @@ fun MainScreenUI() {
             backgroundRes = null,
             iconSize = 56,
             sizeItem = 56,
-            )
+        )
         CircularIconButton(
-            onClick = { /* TODO */ },
+            onClick = onSettingsClick,
             iconRes = R.drawable.ic_btn_settings,
             contentDescription = "button settings",
             modifier = Modifier
@@ -84,7 +107,7 @@ fun MainScreenUI() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             MainButton(
-                onClick = { /* TODO */ },
+                onClick = onPlayClick,
                 fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 btnText = "Play",
@@ -95,7 +118,7 @@ fun MainScreenUI() {
                 buttonWidth = 260.dp
             )
             CircularIconButton(
-                onClick = { /* TODO */ },
+                onClick = onHowToPlayClick,
                 iconRes = null,
                 contentDescription = "How to play",
                 modifier = Modifier,
@@ -115,5 +138,5 @@ fun MainScreenUI() {
 @Composable
 @Preview
 fun MainScreenPreview() {
-    MainScreen()
+    MainScreenUI()
 }

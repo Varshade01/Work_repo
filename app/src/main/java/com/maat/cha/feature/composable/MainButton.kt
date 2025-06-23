@@ -35,13 +35,14 @@ fun MainButton(
     contentDescription: String? = null,
     buttonHeight: Dp = 56.dp,
     buttonWidth: Dp,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
             .width(buttonWidth)
             .height(buttonHeight)
             .clip(RoundedCornerShape(34.dp))
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
     ) {
         Image(
             painter = painterResource(id = backgroundRes),
@@ -55,7 +56,7 @@ fun MainButton(
         ) {
             Text(
                 text = btnText,
-                color = textColor,
+                color = if (enabled) textColor else textColor.copy(alpha = 0.5f),
                 fontWeight = fontWeight,
                 fontSize = fontSize,
                 style = TextStyle(
