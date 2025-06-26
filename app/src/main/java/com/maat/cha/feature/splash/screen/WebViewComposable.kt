@@ -40,6 +40,7 @@ fun WebViewComposable(
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     var showNoInternet by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
+    var navigationStack by remember { mutableStateOf(listOf<String>()) }
 
     // Handle back button with double-tap exit
     BackHandler {
@@ -59,12 +60,14 @@ fun WebViewComposable(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showNoInternet) {
-            // Show No Internet screen
+            // Show No Internet screen with reload button
             ErrorScreen(
                 errorMessage = "No internet connection. Please check your connection and try again.",
                 onRetry = {
                     showNoInternet = false
                     isLoading = true
+                    // When internet returns, reload the current page
+                    // The WebView will maintain its navigation stack
                     webView?.reload()
                 }
             )
@@ -82,7 +85,13 @@ fun WebViewComposable(
                         },
                         onLoadStarted = { isLoading = true },
                         onLoadFinished = { isLoading = false },
-                        onExternalNavigation = onExternalNavigation
+                        onExternalNavigation = onExternalNavigation,
+                        onUrlChanged = { newUrl ->
+                            // Track navigation stack
+                            if (newUrl != null && newUrl != navigationStack.lastOrNull()) {
+                                navigationStack = navigationStack + newUrl
+                            }
+                        }
                     )
                 },
                 modifier = Modifier.fillMaxSize()
@@ -99,7 +108,8 @@ private fun createWebView(
     onError: () -> Unit,
     onLoadStarted: () -> Unit,
     onLoadFinished: () -> Unit,
-    onExternalNavigation: () -> Unit
+    onExternalNavigation: () -> Unit,
+    onUrlChanged: (String?) -> Unit
 ): WebView {
     return WebView(context).apply {
         onWebViewCreated(this)
@@ -110,9 +120,10 @@ private fun createWebView(
             onError = onError,
             onLoadStarted = onLoadStarted,
             onLoadFinished = onLoadFinished,
-            onExternalNavigation = onExternalNavigation
+            onExternalNavigation = onExternalNavigation,
+            onUrlChanged = onUrlChanged
         )
-        configureWebChromeClient()
+        configureWebChromeClient(context)
 
         loadUrl(url)
         setupFocus()
@@ -143,6 +154,10 @@ private fun WebView.configureWebViewSettings() {
         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         cacheMode = WebSettings.LOAD_DEFAULT
 
+        // Enable file downloads
+        setSupportMultipleWindows(true)
+        javaScriptCanOpenWindowsAutomatically = true
+
         // Custom user agent
         userAgentString = "$userAgentString MaatCha/1.0"
     }
@@ -159,7 +174,8 @@ private fun WebView.configureWebViewClient(
     onError: () -> Unit,
     onLoadStarted: () -> Unit,
     onLoadFinished: () -> Unit,
-    onExternalNavigation: () -> Unit
+    onExternalNavigation: () -> Unit,
+    onUrlChanged: (String?) -> Unit
 ) {
     webViewClient = object : WebViewClient() {
         override fun onPageStarted(
@@ -169,11 +185,13 @@ private fun WebView.configureWebViewClient(
         ) {
             super.onPageStarted(view, url, favicon)
             onLoadStarted()
+            onUrlChanged(url)
         }
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
             onLoadFinished()
+            onUrlChanged(url)
         }
 
         override fun onReceivedError(
@@ -209,7 +227,7 @@ private fun WebView.configureWebViewClient(
     }
 }
 
-private fun WebView.configureWebChromeClient() {
+private fun WebView.configureWebChromeClient(context: Context) {
     webChromeClient = object : WebChromeClient() {
         override fun onCreateWindow(
             view: WebView?,
@@ -217,7 +235,39 @@ private fun WebView.configureWebChromeClient() {
             isUserGesture: Boolean,
             resultMsg: Message?
         ): Boolean {
-            // Prevent creation of invisible WebViews
+            // Handle file downloads and new windows
+            val newWebView = WebView(context)
+            newWebView.settings.javaScriptEnabled = true
+            newWebView.webChromeClient = this
+            
+            newWebView.webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    url?.let { urlString ->
+                        // Handle file downloads
+                        if (isDownloadableFile(urlString)) {
+                            downloadFile(context, urlString)
+                            return true
+                        }
+                        
+                        // Load in main WebView
+                        this@configureWebChromeClient.loadUrl(urlString)
+                    }
+                    return true
+                }
+            }
+            
+            val transport = resultMsg?.obj as? WebView.WebViewTransport
+            transport?.webView = newWebView
+            resultMsg?.sendToTarget()
+            return true
+        }
+        
+        override fun onShowFileChooser(
+            webView: WebView?,
+            filePathCallback: android.webkit.ValueCallback<Array<android.net.Uri>>?,
+            fileChooserParams: android.webkit.WebChromeClient.FileChooserParams?
+        ): Boolean {
+            // Handle file uploads if needed
             return false
         }
     }
@@ -250,6 +300,34 @@ private fun isNetworkError(errorCode: Int): Boolean {
     }
 }
 
+/**
+ * Checks if a URL points to a downloadable file
+ */
+private fun isDownloadableFile(url: String): Boolean {
+    val downloadableExtensions = listOf(
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+        ".zip", ".rar", ".7z", ".tar", ".gz",
+        ".mp3", ".mp4", ".avi", ".mov", ".wmv",
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff",
+        ".txt", ".rtf", ".csv"
+    )
+    
+    return downloadableExtensions.any { url.lowercase().endsWith(it) }
+}
+
+/**
+ * Initiates file download
+ */
+private fun downloadFile(context: Context, url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "Unable to download file", Toast.LENGTH_SHORT).show()
+    }
+}
+
 private fun handleUrlLoading(
     url: String,
     webView: WebView?,
@@ -268,6 +346,12 @@ private fun handleUrlLoading(
         }
 
         url.startsWith("http://") || url.startsWith("https://") -> {
+            // Check if it's a downloadable file
+            if (isDownloadableFile(url)) {
+                downloadFile(context, url)
+                return true
+            }
+            
             // Load all HTTP/HTTPS URLs in the main WebView
             webView?.loadUrl(url)
             true
@@ -300,8 +384,10 @@ private fun handleBackPress(
 ) {
     webView?.let { wv ->
         if (wv.canGoBack()) {
+            // Navigate back in WebView history
             wv.goBack()
         } else {
+            // Cannot go back further in WebView - exit app with double-tap
             val now = System.currentTimeMillis()
             if (now - lastBackPressTime < SplashConstants.DOUBLE_TAP_TIMEOUT_MS) {
                 onBackPressed()
@@ -311,5 +397,8 @@ private fun handleBackPress(
                     .show()
             }
         }
+    } ?: run {
+        // No WebView available - exit app
+        onBackPressed()
     }
 }

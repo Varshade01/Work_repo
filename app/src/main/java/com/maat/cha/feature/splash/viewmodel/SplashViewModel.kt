@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.maat.cha.core.data.model.MatchViewResponse
+import com.maat.cha.core.datastore.utils.DataStorePreferences
 import com.maat.cha.core.network.repository.MatchViewRepository
 import com.maat.cha.feature.splash.events.SplashEvents
 import com.maat.cha.feature.splash.navigations.SplashNavigationActions
@@ -16,6 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +29,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val navigationActions: SplashNavigationActions,
-    private val matchViewRepository: MatchViewRepository
+    private val matchViewRepository: MatchViewRepository,
+    private val dataStorePreferences: DataStorePreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SplashState())
@@ -77,7 +80,9 @@ class SplashViewModel @Inject constructor(
      * Handles splash delay completion
      */
     private fun handleSplashDelayComplete() {
-        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Splash delay complete, starting API call")
+        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Splash delay complete, proceeding to main")
+        
+        // Always proceed to main screen - privacy will be handled when play button is pressed
         updateUiState(SplashUiState.ApiLoading)
         fetchMatchView()
     }
@@ -120,7 +125,7 @@ class SplashViewModel @Inject constructor(
      */
     private fun handleExternalNavigation() {
         Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "External navigation detected")
-        _state.update { it.copy(hasNavigatedExternally = true) }
+        // External navigation is now handled differently
     }
 
     /**
@@ -183,15 +188,19 @@ class SplashViewModel @Inject constructor(
     }
 
     /**
-     * Handles API error - never block navigation, always proceed to main app
+     * Handles API error - only navigate to main if we can't get any content
      */
     private fun handleApiError(error: SplashError) {
         Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "API error: ${error.toUserMessage()}")
         
-        // Always navigate to main app regardless of API error
-        // This ensures users can always access the app even without internet
-        Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "API error occurred - navigating to main app")
-        navigateToMain()
+        // Show error state instead of immediately navigating to main
+        // This allows users to retry the API call
+        updateUiState(
+            SplashUiState.Error(
+                message = error.toUserMessage(),
+                isRetryable = error.isRetryable()
+            )
+        )
     }
 
     /**
@@ -231,9 +240,9 @@ class SplashViewModel @Inject constructor(
      * Navigates to main screen
      */
     private fun navigateToMain() {
-                viewModelScope.launch {
+        viewModelScope.launch {
             try {
-                    navigationActions.navigateToMain()
+                navigationActions.navigateToMain()
             } catch (exception: Exception) {
                 Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "Error navigating to main", exception)
             }

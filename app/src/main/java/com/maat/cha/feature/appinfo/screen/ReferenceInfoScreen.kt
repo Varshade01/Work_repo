@@ -17,6 +17,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +41,7 @@ import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.MainButton
 import com.maat.cha.feature.composable.Title
+import com.maat.cha.feature.splash.screen.WebViewComposable
 
 @Composable
 fun ReferenceInfoScreen(
@@ -57,8 +62,30 @@ fun ReferenceInfoScreenUI(
     onMainButtonClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
+    var showPrivacyWebView by remember { mutableStateOf(false) }
+    var showPrivacyFallback by remember { mutableStateOf(false) }
+
+    // Handle Privacy Policy WebView for settings
+    if (showPrivacyWebView) {
+        WebViewComposable(
+            url = InfoScreenType.PrivacyPolicyWebView.PRIVACY_POLICY_URL,
+            onBackPressed = { showPrivacyWebView = false },
+            onExternalNavigation = { /* Handle external navigation if needed */ },
+            onWebViewError = { 
+                // If WebView fails to load, show fallback text
+                showPrivacyWebView = false
+                showPrivacyFallback = true
+            }
+        )
+        return
+    }
+
     val title = stringResource(screenType.titleRes)
-    val content = stringResource(screenType.contentRes)
+    val content = when {
+        screenType is InfoScreenType.PrivacyPolicy && showPrivacyFallback ->
+            stringResource(R.string.privacy_policy_content)
+        else -> stringResource(screenType.contentRes)
+    }
     val scrollState = rememberScrollState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -129,6 +156,19 @@ fun ReferenceInfoScreenUI(
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Show privacy policy link for settings privacy policy
+                    if (screenType is InfoScreenType.PrivacyPolicy && !showPrivacyFallback) {
+                        Text(
+                            text = "Read full privacy policy",
+                            fontSize = 16.sp,
+                            color = Color.Blue,
+                            textDecoration = TextDecoration.Underline,
+                            modifier = Modifier
+                                .clickable { showPrivacyWebView = true }
+                                .padding(bottom = 16.dp)
+                        )
+                    }
                     
                     MainButton(
                         onClick = onMainButtonClick,

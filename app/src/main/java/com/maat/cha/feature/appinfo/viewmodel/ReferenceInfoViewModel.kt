@@ -48,6 +48,10 @@ class ReferenceInfoViewModel @Inject constructor(
                 is InfoScreenType.TermsOfUsePolicy -> {
                     navigationActions.navigateBack()
                 }
+                is InfoScreenType.PrivacyPolicyWebView -> {
+                    // This should not be called directly
+                    navigationActions.navigateBack()
+                }
             }
         }
     }

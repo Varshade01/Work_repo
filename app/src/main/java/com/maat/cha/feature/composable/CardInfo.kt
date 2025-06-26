@@ -42,7 +42,8 @@ fun CardInfo(
     onBottomTextClick: () -> Unit = {},
     onPrivacyPolicyClick: (() -> Unit)? = null,
     showPrivacyPolicyLink: Boolean = false,
-    centerContent: Boolean = false
+    centerContent: Boolean = false,
+    mainButtonEnabled: Boolean = true
 ) {
     val scrollState = rememberScrollState()
     Box(
@@ -115,7 +116,8 @@ fun CardInfo(
                         contentDescription = null,
                         buttonWidth = 300.dp,
                         buttonHeight = 56.dp,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        enabled = mainButtonEnabled
                     )
                     if (!bottomTitleText.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(18.dp))

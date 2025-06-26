@@ -17,9 +17,8 @@ sealed class InfoScreenType(
 
     object TermsOfUse : InfoScreenType(
         titleRes = R.string.title_terms_of_use,
-        contentRes = R.string.how_to_play,
-        bottomBtnTextRes = R.string.text_reject,
-        mainButtonTextRes = R.string.agree
+        contentRes = R.string.terms_of_use_content,
+        mainButtonTextRes = R.string.got_it
     )
 
     object Privacy : InfoScreenType(
@@ -34,6 +33,14 @@ sealed class InfoScreenType(
         contentRes = R.string.privacy_policy_content,
         mainButtonTextRes = R.string.got_it
     )
+
+    object PrivacyPolicyWebView : InfoScreenType(
+        titleRes = R.string.title_privacy,
+        contentRes = R.string.text_privacy,
+        mainButtonTextRes = R.string.accept
+    ) {
+        const val PRIVACY_POLICY_URL = "https://commaatcha.com/policy"
+    }
 
     object TermsOfUsePolicy : InfoScreenType(
         titleRes = R.string.title_terms_of_use,

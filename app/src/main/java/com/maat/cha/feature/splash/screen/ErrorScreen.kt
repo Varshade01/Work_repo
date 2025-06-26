@@ -47,7 +47,7 @@ fun ErrorScreen(
                 textAlign = TextAlign.Center
             )
             
-            // Show retry button only if onRetry is provided
+            // Show reload button only if onRetry is provided
             onRetry?.let { retryAction ->
                 Button(
                     onClick = retryAction,
@@ -59,7 +59,7 @@ fun ErrorScreen(
                         .height(SplashConstants.ERROR_BUTTON_HEIGHT_DP.dp)
                 ) {
                     Text(
-                        text = "Retry",
+                        text = "Reload",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White

@@ -10,19 +10,25 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.maat.cha.R
 import com.maat.cha.feature.composable.BackgroundApp
+import com.maat.cha.feature.composable.CardInfo
 import com.maat.cha.feature.composable.LogoItem
+import com.maat.cha.feature.composable.Title
 import com.maat.cha.feature.splash.events.SplashEvents
 import com.maat.cha.feature.splash.state.SplashUiState
 import com.maat.cha.feature.splash.utils.SplashConstants
@@ -106,14 +112,14 @@ fun SplashScreen(
  */
 @Composable
 private fun SplashContent() {
-        Box(
-            modifier = Modifier
+    Box(
+        modifier = Modifier
             .fillMaxSize()
             .padding(bottom = SplashConstants.BANNER_BOTTOM_PADDING_DP.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            LogoItem(
-                logoRes = R.drawable.logo_splash,
+        contentAlignment = Alignment.Center
+    ) {
+        LogoItem(
+            logoRes = R.drawable.logo_splash,
             modifier = Modifier
         )
     }
@@ -130,9 +136,9 @@ private fun ApiLoadingContent() {
     ) {
         CircularProgressIndicator(
             color = Color(SplashConstants.PRIMARY_COLOR)
-            )
-        }
+        )
     }
+}
 
 /**
  * Error content with retry functionality
