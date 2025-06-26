@@ -7,9 +7,9 @@ import com.maat.cha.core.data.model.MatchViewResponse
  */
 data class SplashState(
     val uiState: SplashUiState = SplashUiState.Initial,
-    val apiResponse: MatchViewResponse? = null,
     val originalApiResponse: MatchViewResponse? = null,
-    val hasNavigatedExternally: Boolean = false
+    val errorMessage: String = "",
+    val isRetryable: Boolean = false
 )
 
 /**
@@ -19,18 +19,15 @@ sealed class SplashUiState {
     object Initial : SplashUiState()
     object Loading : SplashUiState()
     object ApiLoading : SplashUiState()
-    
-    data class Error(
-        val message: String,
-        val isRetryable: Boolean = true
-    ) : SplashUiState()
-    
     data class WebView(
         val url: String
     ) : SplashUiState()
-    
     data class Banner(
         val imageUrl: String
+    ) : SplashUiState()
+    data class Error(
+        val message: String,
+        val isRetryable: Boolean = false
     ) : SplashUiState()
 }
 

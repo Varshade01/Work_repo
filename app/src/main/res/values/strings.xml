@@ -5,10 +5,13 @@
     <string name="connection_failed">Connection failed</string>
     <!--App INFO-->
     <string name="how_to_play">
-    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the 
-        industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\n\n
-    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the 
-        industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+    Welcome to Maat.cha! This is a casino game where you can test your luck and win exciting prizes.\n\n
+    How to play:\n
+    • Tap the Play button to start a new game\n
+    • Follow the on-screen instructions for each game type\n
+    • Use your coins wisely to maximize your winnings\n
+    • Check the settings to customize your gaming experience\n\n
+    Remember to play responsibly and have fun!
     </string>
     <string name="title_how_to_play">How to play</string>
     <string name="title_terms_of_use">Terms of Use</string>
@@ -16,10 +19,49 @@
     <string name="text_reject">Reject</string>
     <string name="text_privacy">You can read our privacy policy</string>
     <string name="privacy_policy">Privacy policy</string>
-    <string name="privacy_policy_content">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-        industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\n\n
-    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-        industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</string>
+    <string name="privacy_policy_content">
+        Privacy Policy for Maat.cha Casino Game\n\n
+        
+        Last updated: 2024\n\n
+        
+        Welcome to Maat.cha! We respect your privacy and are committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our casino game application.\n\n
+        
+        Information We Collect:\n
+        • Game performance data to improve your experience\n
+        • Device information for compatibility and optimization\n
+        • Usage statistics to enhance game features\n
+        • Technical data for app functionality and security\n\n
+        
+        How We Use Your Information:\n
+        • To provide and maintain the game service\n
+        • To improve game performance and user experience\n
+        • To ensure fair play and prevent fraud\n
+        • To communicate important updates and features\n\n
+        
+        Data Security:\n
+        We implement appropriate security measures to protect your information against unauthorized access, alteration, disclosure, or destruction.\n\n
+        
+        Third-Party Services:\n
+        Our app may use third-party services for analytics and advertising. These services have their own privacy policies.\n\n
+        
+        Your Rights:\n
+        You have the right to:\n
+        • Access your personal data\n
+        • Request data correction or deletion\n
+        • Opt-out of certain data collection\n
+        • Contact us with privacy concerns\n\n
+        
+        Children\'s Privacy:\n
+        Our game is not intended for children under 13. We do not knowingly collect personal information from children under 13.\n\n
+        
+        Changes to This Policy:\n
+        We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy in the app.\n\n
+        
+        Contact Us:\n
+        If you have questions about this Privacy Policy, please contact us through the app or visit our website.\n\n
+        
+        By using Maat.cha, you agree to this Privacy Policy and consent to the collection and use of your information as described herein.
+    </string>
     <string name="terms_of_use_content">
         Terms of Use\n\n
         By using this application, you agree to these terms and conditions.\n\n

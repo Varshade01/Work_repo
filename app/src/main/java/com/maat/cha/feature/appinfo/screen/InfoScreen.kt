@@ -25,6 +25,7 @@ import com.maat.cha.feature.composable.BackgroundApp
 import com.maat.cha.feature.composable.CardInfo
 import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.Title
+import com.maat.cha.feature.splash.screen.WebViewComposable
 
 @Composable
 fun InfoScreen(
@@ -47,27 +48,50 @@ fun InfoScreenUI(
     onBackClick: () -> Unit = {}
 ) {
     var isPrivacyExpanded by remember { mutableStateOf(false) }
+    var showPrivacyWebView by remember { mutableStateOf(false) }
+    var showPrivacyFallback by remember { mutableStateOf(false) }
+    var hasReadPrivacyPolicy by remember { mutableStateOf(false) }
 
     val isPrivacy = screenType is InfoScreenType.Privacy
     val isPrivacyExpandedState = isPrivacy && isPrivacyExpanded
 
+    // Handle Privacy Policy WebView
+    if (showPrivacyWebView) {
+        WebViewComposable(
+            url = InfoScreenType.PrivacyPolicyWebView.PRIVACY_POLICY_URL,
+            onBackPressed = { 
+                showPrivacyWebView = false
+                // Mark that user has read the privacy policy
+                hasReadPrivacyPolicy = true
+            },
+            onExternalNavigation = { /* Handle external navigation if needed */ },
+            onWebViewError = { 
+                // If WebView fails to load, show fallback text
+                showPrivacyWebView = false
+                showPrivacyFallback = true
+                hasReadPrivacyPolicy = true // Consider fallback as "read"
+            }
+        )
+        return
+    }
+
     val title = stringResource(screenType.titleRes)
     val content = when {
-        isPrivacyExpandedState ->
+        isPrivacyExpandedState || showPrivacyFallback ->
             stringResource(R.string.privacy_policy_content)
         else -> stringResource(screenType.contentRes)
     }
 
     val mainButtonText = when {
-        isPrivacyExpandedState ->
+        isPrivacyExpandedState || showPrivacyFallback ->
             stringResource(R.string.agree)
         else -> stringResource(screenType.mainButtonTextRes)
     }
 
     val bottomText = when {
-        isPrivacyExpandedState ->
+        isPrivacyExpandedState || showPrivacyFallback ->
             stringResource(R.string.text_reject)
-        isPrivacy && !isPrivacyExpanded ->
+        isPrivacy && !isPrivacyExpanded && !showPrivacyFallback ->
             null
         screenType.bottomBtnTextRes != null ->
             stringResource(screenType.bottomBtnTextRes)
@@ -75,8 +99,25 @@ fun InfoScreenUI(
     }
 
     val handleBottomTextClick = when {
-        isPrivacyExpandedState -> ({ isPrivacyExpanded = false })
+        isPrivacyExpandedState || showPrivacyFallback -> ({ 
+            isPrivacyExpanded = false
+            showPrivacyFallback = false
+            hasReadPrivacyPolicy = false // Reset when going back
+        })
         else -> onBottomTextClick
+    }
+
+    val handlePrivacyPolicyClick = when {
+        isPrivacy && !isPrivacyExpanded && !showPrivacyFallback -> {
+            { showPrivacyWebView = true }
+        }
+        else -> null
+    }
+
+    // For privacy screen, only allow accept if user has read the policy
+    val canAcceptPrivacy = when {
+        isPrivacy && !isPrivacyExpanded && !showPrivacyFallback -> hasReadPrivacyPolicy
+        else -> true
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -120,13 +161,12 @@ fun InfoScreenUI(
             fontSizeBottomTitleText = 32.sp,
             modifier = Modifier.align(Alignment.Center),
             mainButtonText = mainButtonText,
-            onMainButtonClick = onMainButtonClick,
+            onMainButtonClick = if (canAcceptPrivacy) onMainButtonClick else { {} },
             onBottomTextClick = handleBottomTextClick,
-            centerContent = isPrivacy && !isPrivacyExpanded,
-            showPrivacyPolicyLink = isPrivacy && !isPrivacyExpanded,
-            onPrivacyPolicyClick = if (isPrivacy && !isPrivacyExpanded) {
-                { isPrivacyExpanded = true }
-            } else null
+            centerContent = isPrivacy && !isPrivacyExpanded && !showPrivacyFallback,
+            showPrivacyPolicyLink = isPrivacy && !isPrivacyExpanded && !showPrivacyFallback,
+            onPrivacyPolicyClick = handlePrivacyPolicyClick,
+            mainButtonEnabled = canAcceptPrivacy
         )
     }
 }

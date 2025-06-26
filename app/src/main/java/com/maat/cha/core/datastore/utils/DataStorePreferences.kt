@@ -30,6 +30,52 @@ class DataStorePreferences(
         }
     }
 
+    val privacyAccepted: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.PRIVACY_ACCEPTED] ?: false
+    }
+
+    suspend fun setPrivacyAccepted(accepted: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.PRIVACY_ACCEPTED] = accepted
+        }
+    }
+
+    suspend fun resetPrivacyAccepted() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(DataStoreKeys.PRIVACY_ACCEPTED)
+        }
+    }
+
+    val privacyRead: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.PRIVACY_READ] ?: false
+    }
+
+    suspend fun setPrivacyRead(read: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.PRIVACY_READ] = read
+        }
+    }
+
+    val howToPlayRead: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.HOW_TO_PLAY_READ] ?: false
+    }
+
+    suspend fun setHowToPlayRead(read: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.HOW_TO_PLAY_READ] = read
+        }
+    }
+
+    val termsOfUseRead: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DataStoreKeys.TERMS_OF_USE_READ] ?: false
+    }
+
+    suspend fun setTermsOfUseRead(read: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DataStoreKeys.TERMS_OF_USE_READ] = read
+        }
+    }
+
     val userName: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[DataStoreKeys.USER_NAME] ?: ""
     }

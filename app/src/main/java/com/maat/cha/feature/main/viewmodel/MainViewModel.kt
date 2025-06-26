@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,10 +51,29 @@ class MainViewModel @Inject constructor(
             }
 
             is MainEvents.OnPlayClick -> viewModelScope.launch {
-                if (state.value.hasReadAllInfo) {
-                    navigationActions.navigateToGame()
-                } else {
-                    navigationActions.navigateToInfo(InfoType.HOW_TO_PLAY)
+                // Check which screens have been read and show the next one
+                val privacyAccepted = dataStorePreferences.privacyAccepted.first()
+                val privacyRead = dataStorePreferences.privacyRead.first()
+                val termsOfUseRead = dataStorePreferences.termsOfUseRead.first()
+                val howToPlayRead = dataStorePreferences.howToPlayRead.first()
+                
+                when {
+                    !privacyAccepted || !privacyRead -> {
+                        // Show privacy (either not accepted or not read)
+                        navigationActions.navigateToInfo(InfoType.PRIVACY)
+                    }
+                    !termsOfUseRead -> {
+                        // Show terms of use
+                        navigationActions.navigateToInfo(InfoType.TERMS_OF_USE)
+                    }
+                    !howToPlayRead -> {
+                        // Show how to play
+                        navigationActions.navigateToInfo(InfoType.HOW_TO_PLAY)
+                    }
+                    else -> {
+                        // All screens read and accepted - go to game
+                        navigationActions.navigateToGame()
+                    }
                 }
             }
 
