@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +8,12 @@ plugins {
 
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+}
+
+val keystorePropsFile = rootProject.file("local.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists())
+        load(FileInputStream(keystorePropsFile))
 }
 
 android {
@@ -15,19 +24,35 @@ android {
         applicationId = "com.maat.cha"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val path = keystoreProps.getProperty("MAATCHA_KEYSTORE")
+                ?: throw GradleException("MAATCHA_KEYSTORE не вказаний в local.properties")
+            storeFile = file(path)
+            storePassword = keystoreProps.getProperty("MAATCHA_KEYSTORE_PASSWORD")
+                ?: throw GradleException("MAATCHA_KEYSTORE_PASSWORD не вказаний")
+            keyAlias = keystoreProps.getProperty("MAATCHA_KEY_ALIAS")
+                ?: throw GradleException("MAATCHA_KEY_ALIAS не вказаний")
+            keyPassword = keystoreProps.getProperty("MAATCHA_KEY_PASSWORD")
+                ?: throw GradleException("MAATCHA_KEY_PASSWORD не вказаний")
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -59,7 +84,7 @@ dependencies {
     implementation(libs.converter.moshi)
     implementation(libs.androidx.appcompat)
     ksp(libs.moshi.kotlin.codegen)
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation(libs.logging.interceptor)
 
     //data store
     implementation(libs.androidx.datastore.preferences)

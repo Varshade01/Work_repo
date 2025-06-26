@@ -231,9 +231,9 @@ class SplashViewModel @Inject constructor(
      * Navigates to main screen
      */
     private fun navigateToMain() {
-        viewModelScope.launch {
+                viewModelScope.launch {
             try {
-                navigationActions.navigateToMain()
+                    navigationActions.navigateToMain()
             } catch (exception: Exception) {
                 Log.e(SplashConstants.TAG_SPLASH_VIEWMODEL, "Error navigating to main", exception)
             }

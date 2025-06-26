@@ -77,3 +77,7 @@ firebase-performance-plugin.properties
 # Ignore Kotlin/Native debug symbols
 /*.kotlin_module
 
+# Ignore release keystore and mapping files
+maat_cha_release.keystore
+app/build/outputs/mapping/
+

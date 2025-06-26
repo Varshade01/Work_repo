@@ -106,14 +106,14 @@ fun SplashScreen(
  */
 @Composable
 private fun SplashContent() {
-    Box(
-        modifier = Modifier
+        Box(
+            modifier = Modifier
             .fillMaxSize()
             .padding(bottom = SplashConstants.BANNER_BOTTOM_PADDING_DP.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        LogoItem(
-            logoRes = R.drawable.logo_splash,
+            contentAlignment = Alignment.Center
+        ) {
+            LogoItem(
+                logoRes = R.drawable.logo_splash,
             modifier = Modifier
         )
     }
@@ -130,9 +130,9 @@ private fun ApiLoadingContent() {
     ) {
         CircularProgressIndicator(
             color = Color(SplashConstants.PRIMARY_COLOR)
-        )
+            )
+        }
     }
-}
 
 /**
  * Error content with retry functionality

@@ -18,6 +18,7 @@ kotlinxCoroutinesAndroid = "1.10.2"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2025.06.00"
+loggingInterceptor = "4.12.0"
 moshiKotlinCodegen = "1.15.2"
 retrofit = "3.0.0"
 navigationCompose = "2.9.0"
@@ -37,6 +38,7 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltA
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 installreferrer = { module = "com.android.installreferrer:installreferrer", version.ref = "installreferrer" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshiKotlinCodegen" }
 moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshiKotlinCodegen" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
