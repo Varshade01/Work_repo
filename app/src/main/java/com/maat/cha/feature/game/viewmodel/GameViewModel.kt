@@ -10,6 +10,9 @@ import com.maat.cha.feature.game.events.GameEvents
 import com.maat.cha.feature.game.navigation.GameNavigationActions
 import com.maat.cha.feature.game.state.GameState
 import com.maat.cha.feature.game.utils.GameUtils
+import com.maat.cha.feature.game.utils.Match3GameUtils
+import com.maat.cha.feature.game.model.FruitItem
+import com.maat.cha.feature.game.model.GameBoard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +31,8 @@ class GameViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(
         GameState(
-            gameField = GameUtils.generateGameField(1) // Initialize with random field
+            gameField = GameUtils.generateGameField(1), // Initialize with random field
+            gameBoard = Match3GameUtils.generateMatch3Board(GameUtils.getFieldSizeForRound(1))
         )
     )
     val state: StateFlow<GameState> = _state.asStateFlow()
@@ -70,13 +74,32 @@ class GameViewModel @Inject constructor(
             is GameEvents.OnRoundSelect -> {
                 // Round selection is disabled during game
                 if (!state.value.isGameStarted) {
+                    val newSize = GameUtils.getFieldSizeForRound(event.roundNumber)
                     _state.update {
                         it.copy(
                             currentRound = event.roundNumber,
-                            gameField = GameUtils.generateGameField(event.roundNumber) // Generate new field for selected round
+                            gameField = GameUtils.generateGameField(event.roundNumber),
+                            gameBoard = Match3GameUtils.generateMatch3Board(newSize)
                         )
                     }
                 }
+            }
+            
+            // Match 3 specific events
+            is GameEvents.OnFruitSelected -> {
+                handleFruitSelected(event.fruit)
+            }
+            
+            is GameEvents.OnFruitMoved -> {
+                handleFruitMoved(event.fromFruit, event.toRow, event.toCol)
+            }
+            
+            is GameEvents.OnFruitDeselected -> {
+                handleFruitDeselected()
+            }
+            
+            is GameEvents.OnMoveCompleted -> {
+                handleMoveCompleted()
             }
         }
     }
@@ -84,7 +107,14 @@ class GameViewModel @Inject constructor(
     private fun startGame() {
         viewModelScope.launch {
             _state.update { it.copy(isGameStarted = true) }
-            spinGame()
+            
+            if (state.value.isMatch3Mode) {
+                // In Match 3 mode, just start the game without spinning
+                // The game board is already generated and ready for interaction
+            } else {
+                // Legacy spinning mode
+                spinGame()
+            }
         }
     }
 
@@ -255,6 +285,7 @@ class GameViewModel @Inject constructor(
     private fun nextRound() {
         val currentState = state.value
         val nextRound = currentState.currentRound + 1
+        val newSize = GameUtils.getFieldSizeForRound(nextRound)
 
         _state.update {
             it.copy(
@@ -264,13 +295,19 @@ class GameViewModel @Inject constructor(
                 currentDialog = null,
                 isDialogVisible = false,
                 matchedItems = emptyList(),
-                gameField = GameUtils.generateGameField(nextRound) // Generate new field for next round
+                gameField = GameUtils.generateGameField(nextRound), // Generate new field for next round
+                gameBoard = Match3GameUtils.generateMatch3Board(newSize)
             )
         }
 
-        // Start next round spinning
-        viewModelScope.launch {
-            spinGame()
+        // Start next round - in Match 3 mode, just start immediately
+        if (currentState.isMatch3Mode) {
+            // Game is already started and ready for interaction
+        } else {
+            // Legacy spinning mode
+            viewModelScope.launch {
+                spinGame()
+            }
         }
     }
 
@@ -292,9 +329,12 @@ class GameViewModel @Inject constructor(
                 totalCoins = currentState.totalCoins, // Preserve collected coins
                 roundCoins = 0,
                 gameField = GameUtils.generateGameField(1), // Initialize with random field
+                gameBoard = Match3GameUtils.generateMatch3Board(GameUtils.getFieldSizeForRound(1)),
                 matchedItems = emptyList(),
                 isDialogVisible = false,
-                collectedFruitsPerRound = emptyMap()
+                collectedFruitsPerRound = emptyMap(),
+                isMatch3Mode = true, // Keep Match 3 mode enabled
+                isProcessingMove = false
             )
         }
     }
@@ -323,6 +363,135 @@ class GameViewModel @Inject constructor(
                 isDialogVisible = true,
                 totalCoins = updatedTotalCoins
             )
+        }
+    }
+
+    private fun handleFruitSelected(fruit: FruitItem) {
+        val currentBoard = state.value.gameBoard ?: return
+        
+        // Set the selected fruit
+        val updatedBoard = currentBoard.setSelectedFruit(fruit)
+        _state.update { it.copy(gameBoard = updatedBoard) }
+    }
+
+    private fun handleFruitMoved(fromFruit: FruitItem, toRow: Int, toCol: Int) {
+        val currentBoard = state.value.gameBoard ?: return
+        
+        // Validate the move
+        if (!Match3GameUtils.isValidMove(currentBoard, fromFruit.row, fromFruit.col, toRow, toCol)) {
+            return
+        }
+        
+        // Check if the move would create a match
+        val wouldMatch = Match3GameUtils.wouldCreateMatch(
+            currentBoard.fruits,
+            fromFruit.row,
+            fromFruit.col,
+            toRow,
+            toCol
+        )
+        
+        if (wouldMatch) {
+            // Execute the move
+            val swappedBoard = currentBoard.swapFruits(fromFruit.row, fromFruit.col, toRow, toCol)
+            
+            // Find matches
+            val matches = Match3GameUtils.findMatches(swappedBoard.fruits)
+            
+            if (matches.isNotEmpty()) {
+                // Highlight matched fruits
+                val highlightedBoard = swappedBoard.highlightMatchedFruits(matches.flatten())
+                
+                // Calculate coins
+                val roundCoins = Match3GameUtils.calculateCoinsForMatches(matches, state.value.currentRound)
+                
+                _state.update {
+                    it.copy(
+                        gameBoard = highlightedBoard.setSelectedFruit(null),
+                        roundCoins = roundCoins,
+                        isProcessingMove = true
+                    )
+                }
+                
+                // Wait a bit to show the match, then show dialog
+                viewModelScope.launch {
+                    delay(1500L) // Show match for 1.5 seconds
+                    showMatch3RoundResult(matches, highlightedBoard)
+                }
+            } else {
+                // No match found, revert the move
+                _state.update {
+                    it.copy(
+                        gameBoard = currentBoard.setSelectedFruit(null),
+                        isProcessingMove = true
+                    )
+                }
+                
+                // Animate the revert
+                viewModelScope.launch {
+                    delay(500L) // Short delay for revert animation
+                    _state.update { it.copy(isProcessingMove = false) }
+                }
+            }
+        } else {
+            // Invalid move, deselect
+            _state.update {
+                it.copy(gameBoard = currentBoard.setSelectedFruit(null))
+            }
+        }
+    }
+
+    private fun handleFruitDeselected() {
+        val currentBoard = state.value.gameBoard ?: return
+        _state.update {
+            it.copy(gameBoard = currentBoard.setSelectedFruit(null))
+        }
+    }
+
+    private fun handleMoveCompleted() {
+        _state.update { it.copy(isProcessingMove = false) }
+    }
+    
+    private fun showMatch3RoundResult(matches: List<List<Pair<Int, Int>>>, board: GameBoard) {
+        val currentState = state.value
+        
+        // Get collected fruits from matches
+        val collectedFruits = Match3GameUtils.getCollectedFruitsFromMatches(board, matches)
+        
+        // Update collected fruits for current round
+        val updatedCollectedFruits = currentState.collectedFruitsPerRound.toMutableMap()
+        updatedCollectedFruits[currentState.currentRound] = collectedFruits
+        
+        if (currentState.currentRound < currentState.totalRounds) {
+            // Show round finished dialog
+            val dialog = GameDialogType.RoundFinished(
+                roundNumber = currentState.currentRound,
+                collectedFruits = collectedFruits
+            )
+            _state.update {
+                it.copy(
+                    currentDialog = dialog,
+                    isDialogVisible = true,
+                    collectedFruitsPerRound = updatedCollectedFruits,
+                    isProcessingMove = false
+                )
+            }
+        } else {
+            // Show "Collect all rules" dialog
+            val collectRulesDialog = GameDialogType.CollectRuiles(
+                columns = (1..4).map { round ->
+                    val collectedFruits = updatedCollectedFruits[round] ?: emptyList()
+                    collectedFruits
+                }
+            )
+            _state.update {
+                it.copy(
+                    currentDialog = collectRulesDialog,
+                    isDialogVisible = true,
+                    collectedFruitsPerRound = updatedCollectedFruits,
+                    isProcessingMove = false
+                )
+            }
         }
     }
 } 

@@ -164,6 +164,13 @@ class SplashViewModel @Inject constructor(
         // Store original response for external navigation scenarios
         _state.update { it.copy(originalApiResponse = response) }
         
+        // Check development flag to bypass WebView for testing
+        if (com.maat.cha.BuildConfig.BYPASS_WEBVIEW_FOR_TESTING) {
+            Log.d(SplashConstants.TAG_SPLASH_VIEWMODEL, "Development mode: bypassing WebView, navigating to main")
+            navigateToMain()
+            return
+        }
+        
         // Determine UI state based on response
         val uiState = SplashUtils.determineUiState(response)
         

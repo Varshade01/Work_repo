@@ -33,6 +33,7 @@ import com.maat.cha.feature.composable.CircularIconButton
 import com.maat.cha.feature.composable.MainButton
 import com.maat.cha.feature.composable.Title
 import com.maat.cha.feature.game.components.AnimatedGameField
+import com.maat.cha.feature.game.components.Match3GameField
 import com.maat.cha.feature.game.components.CollectionItemsSection
 import com.maat.cha.feature.game.dialogs.GameDialog
 import com.maat.cha.feature.game.events.GameEvents
@@ -53,7 +54,11 @@ fun GameScreen(
         onNextRoundClick = { viewModel.onEvent(GameEvents.OnNextRoundClick) },
         onAgainClick = { viewModel.onEvent(GameEvents.OnAgainClick) },
         onCollectRulesClick = { viewModel.onCollectRulesClick() },
-        onRoundSelect = { round -> viewModel.onEvent(GameEvents.OnRoundSelect(round)) }
+        onRoundSelect = { round -> viewModel.onEvent(GameEvents.OnRoundSelect(round)) },
+        onFruitSelected = { fruit -> viewModel.onEvent(GameEvents.OnFruitSelected(fruit)) },
+        onFruitMoved = { fruit, toRow, toCol -> viewModel.onEvent(GameEvents.OnFruitMoved(fruit, toRow, toCol)) },
+        onFruitDeselected = { viewModel.onEvent(GameEvents.OnFruitDeselected) },
+        onMoveCompleted = { viewModel.onEvent(GameEvents.OnMoveCompleted) }
     )
 }
 
@@ -66,7 +71,11 @@ fun GameScreenUI(
     onNextRoundClick: () -> Unit = {},
     onAgainClick: () -> Unit = {},
     onCollectRulesClick: () -> Unit = {},
-    onRoundSelect: (Int) -> Unit = {}
+    onRoundSelect: (Int) -> Unit = {},
+    onFruitSelected: (com.maat.cha.feature.game.model.FruitItem) -> Unit = {},
+    onFruitMoved: (com.maat.cha.feature.game.model.FruitItem, Int, Int) -> Unit = { _, _, _ -> },
+    onFruitDeselected: () -> Unit = {},
+    onMoveCompleted: () -> Unit = {}
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundApp(
@@ -132,14 +141,26 @@ fun GameScreenUI(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Animated game field
-            AnimatedGameField(
-                gameField = state.gameField,
-                isSpinning = state.isSpinning,
-                currentRound = state.currentRound,
-                matchedItems = state.matchedItems,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            // Game field - use Match 3 field if enabled, otherwise use animated field
+            if (state.isMatch3Mode && state.gameBoard != null) {
+                Match3GameField(
+                    gameBoard = state.gameBoard,
+                    isProcessingMove = state.isProcessingMove,
+                    onFruitSelected = onFruitSelected,
+                    onFruitMoved = onFruitMoved,
+                    onFruitDeselected = onFruitDeselected,
+                    onMoveCompleted = onMoveCompleted,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            } else {
+                AnimatedGameField(
+                    gameField = state.gameField,
+                    isSpinning = state.isSpinning,
+                    currentRound = state.currentRound,
+                    matchedItems = state.matchedItems,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -160,21 +181,23 @@ fun GameScreenUI(
             )
         }
 
-        // Start button
-        MainButton(
-            onClick = onStartClick,
-            fontWeight = FontWeight.Bold,
-            fontSize = 32.sp,
-            btnText = if (state.isGameStarted) "SPINNING..." else "Start",
-            textColor = Color.White,
-            backgroundRes = R.drawable.background_btn,
-            modifier = Modifier
-                .padding(32.dp)
-                .align(Alignment.BottomCenter),
-            contentDescription = "Start button",
-            buttonWidth = 320.dp,
-            enabled = !state.isGameStarted
-        )
+        // Start button - hide in Match 3 mode when game is started
+        if (!state.isMatch3Mode || !state.isGameStarted) {
+            MainButton(
+                onClick = onStartClick,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                btnText = if (state.isGameStarted) "SPINNING..." else "Start",
+                textColor = Color.White,
+                backgroundRes = R.drawable.background_btn,
+                modifier = Modifier
+                    .padding(32.dp)
+                    .align(Alignment.BottomCenter),
+                contentDescription = "Start button",
+                buttonWidth = 320.dp,
+                enabled = !state.isGameStarted
+            )
+        }
 
         // Game dialog
         if (state.isDialogVisible && state.currentDialog != null) {
